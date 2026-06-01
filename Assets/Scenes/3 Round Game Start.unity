@@ -506,7 +506,7 @@ MonoBehaviour:
   roundWinnerAnnounceText: {fileID: 633409931}
   playerPrefab: {fileID: 7166293856019272163, guid: aa63237285daa004b99b5a1fe9d04b4d, type: 3}
   mobileControlsUIPrefab: {fileID: 7310163900249425810, guid: 03ddaa513f8e3c943b210c3de7737863, type: 3}
-  roundDurationSeconds: 10
+  roundDurationSeconds: 20
   totalVersusRounds: 5
   teamRoundsToWin: 3
   spawnRadiusFromCenter: 2.5

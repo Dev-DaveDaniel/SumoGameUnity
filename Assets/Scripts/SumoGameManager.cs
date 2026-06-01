@@ -64,13 +64,12 @@ public class SumoGameManager : MonoBehaviour
     private Color teamBBlue = new Color(0f, 0.5f, 1f, 1f);
 
     private Color[] versusPlayerColors = new Color[] {
-        new Color(1f, 0.15f, 0.35f, 1f),   // P1: Vivid Red
-        new Color(1f, 0.84f, 0f, 1f),      // P2: Cyber Gold
-        new Color(0.2f, 1f, 0.2f, 1f),     // P3: Neon Green
-        new Color(0f, 0.65f, 1f, 1f)       // P4: Electric Blue
+        new Color(1f, 0.15f, 0.35f, 1f),
+        new Color(1f, 0.84f, 0f, 1f),
+        new Color(0.2f, 1f, 0.2f, 1f),
+        new Color(0f, 0.65f, 1f, 1f)
     };
 
-    // --- NEW: Text labels matching the versus colors array above ---
     private string[] versusColorNames = new string[] {
         "RED",
         "GOLD",
@@ -216,7 +215,6 @@ public class SumoGameManager : MonoBehaviour
 
             TextMeshPro tmproText = textObj.AddComponent<TextMeshPro>();
 
-            // Replaced raw number tagging inside dynamic match UI for consistency
             if (activeGameMode == GameMode.Team)
             {
                 tmproText.text = $"T{(playerTeamAssignments[i] == 0 ? "A" : "B")}-P{i + 1}";
@@ -280,11 +278,23 @@ public class SumoGameManager : MonoBehaviour
         activeWrestlersInRound.Remove(victimObj);
         eliminatedThisRound.Add(victimObj);
 
+        // --- NEW LOGIC: VALIDATE LAST INTERACTION TIMEFRAME ---
         if (victimMovement != null && victimMovement.lastAttackerIndex != -1)
         {
-            int killerIdx = victimMovement.lastAttackerIndex;
-            int koPayout = victimMovement.consecutiveHitCount >= 3 ? 3 : (victimMovement.consecutiveHitCount == 2 ? 2 : 1);
-            playerScores[killerIdx] += koPayout;
+            float elapsedSinceLastHit = Time.time - victimMovement.lastInteractionTimestamp;
+
+            // If the push happened within the valid window (e.g., 2 seconds), award the point!
+            if (elapsedSinceLastHit <= victimMovement.trackingWindowDuration)
+            {
+                int killerIdx = victimMovement.lastAttackerIndex;
+                int koPayout = victimMovement.consecutiveHitCount >= 3 ? 3 : (victimMovement.consecutiveHitCount == 2 ? 2 : 1);
+                playerScores[killerIdx] += koPayout;
+                Debug.Log($"Elimination Verified! Player {killerIdx + 1} gets credit for pushing Player {victimPlayerIndex + 1} out.");
+            }
+            else
+            {
+                Debug.Log($"Player {victimPlayerIndex + 1} fell out, but the last hit was {elapsedSinceLastHit}s ago. Counted as self-elimination.");
+            }
         }
 
         if (activeGameMode == GameMode.Team)
@@ -350,12 +360,12 @@ public class SumoGameManager : MonoBehaviour
 
         if (teamAScore >= teamRoundsToWin)
         {
-            StartCoroutine(DelayedBannerOverride(" MATCH OVER \nRED TEAM HAS WON THE MATCH!", 3.5f));
+            StartCoroutine(DelayedBannerOverride("🏆 MATCH OVER 🏆\nRED TEAM HAS WON THE MATCH!", 3.5f));
             StartCoroutine(MatchEndReturnDelayRoutine(7f));
         }
         else if (teamBScore >= teamRoundsToWin)
         {
-            StartCoroutine(DelayedBannerOverride(" MATCH OVER \nBLUE TEAM HAS WON THE MATCH!", 3.5f));
+            StartCoroutine(DelayedBannerOverride("🏆 MATCH OVER 🏆\nBLUE TEAM HAS WON THE MATCH!", 3.5f));
             StartCoroutine(MatchEndReturnDelayRoutine(7f));
         }
         else
@@ -374,7 +384,6 @@ public class SumoGameManager : MonoBehaviour
             int winnerIdx = (victimPlayerIndex == suddenDeathPlayerA) ? suddenDeathPlayerB : suddenDeathPlayerA;
             playerScores[winnerIdx] += 5;
 
-            // --- CHANGED: Shouts out color name instead of player index ---
             string summaryText = $"{versusColorNames[winnerIdx]} WINS SUDDEN DEATH!\n\n" + BuildLeaderboardString();
             CheckVersusTournamentStandings(summaryText);
             return;
@@ -404,7 +413,6 @@ public class SumoGameManager : MonoBehaviour
 
             RecordEngagementStates();
 
-            // --- CHANGED: Shouts out color name instead of player index ---
             string summaryText = $"{versusColorNames[survivorIdx]} SURVIVED THE ROUND! (+5 pts)\n\n" + BuildLeaderboardString();
             CheckVersusTournamentStandings(summaryText);
         }
@@ -487,8 +495,7 @@ public class SumoGameManager : MonoBehaviour
 
         if (matchWon)
         {
-            // --- CHANGED: Shouts out color name instead of player index ---
-            StartCoroutine(DelayedBannerOverride($" MATCH OVER \n{versusColorNames[highestScoreIdx]} IS THE FIRST TO 15 PTS!", 3.5f));
+            StartCoroutine(DelayedBannerOverride($"🏆 MATCH OVER 🏆\n{versusColorNames[highestScoreIdx]} IS THE FIRST TO 15 PTS!", 3.5f));
             StartCoroutine(MatchEndReturnDelayRoutine(7f));
         }
         else
@@ -497,8 +504,7 @@ public class SumoGameManager : MonoBehaviour
             if (currentRound <= totalVersusRounds) StartCoroutine(RoundTransitionDelayRoutine(5f));
             else
             {
-                // --- CHANGED: Shouts out color name instead of player index ---
-                StartCoroutine(DelayedBannerOverride($" MATCH OVER \n{versusColorNames[highestScoreIdx]} HIGHEST FINAL SCORE WIN!", 3.5f));
+                StartCoroutine(DelayedBannerOverride($"🏆 MATCH OVER 🏆\n{versusColorNames[highestScoreIdx]} HIGHEST FINAL SCORE WIN!", 3.5f));
                 StartCoroutine(MatchEndReturnDelayRoutine(7f));
             }
         }
@@ -514,7 +520,6 @@ public class SumoGameManager : MonoBehaviour
         for (int placement = 0; placement < sortedIndices.Count; placement++)
         {
             int originalPlayerIdx = sortedIndices[placement];
-            // --- CHANGED: Leaderboard reads color tags (e.g. "RED - 10 / 15 pts") ---
             header += $"{(placement == 0 ? "👑 1st" : $"{placement + 1}th")}: {versusColorNames[originalPlayerIdx]} - {playerScores[originalPlayerIdx]} / 15 pts\n";
         }
         return header;
@@ -601,12 +606,30 @@ public class SumoGameManager : MonoBehaviour
             {
                 roundWinnerAnnounceText.gameObject.SetActive(false);
                 if (timerText != null) timerText.gameObject.SetActive(true);
+
+                // --- ROUND STARTING: Re-enable all active player UI controls ---
+                for (int i = 0; i < spawnedControlUIs.Length; i++)
+                {
+                    if (spawnedControlUIs[i] != null)
+                    {
+                        spawnedControlUIs[i].SetActive(true);
+                    }
+                }
             }
             else
             {
                 roundWinnerAnnounceText.gameObject.SetActive(true);
                 roundWinnerAnnounceText.text = displayMessage;
                 if (timerText != null) timerText.gameObject.SetActive(false);
+
+                // --- ROUND OVER: Hide all player UI controls while announcement is shown ---
+                for (int i = 0; i < spawnedControlUIs.Length; i++)
+                {
+                    if (spawnedControlUIs[i] != null)
+                    {
+                        spawnedControlUIs[i].SetActive(false);
+                    }
+                }
             }
         }
     }
