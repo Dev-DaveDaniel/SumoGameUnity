@@ -17,18 +17,36 @@ public class TopDownMovement : MonoBehaviour
     [Header("Push / Shove Settings")]
     public float pushForce = 25f;
     public float pushCooldown = 0.3f;
-
     [Tooltip("Size of the push area window.")]
     [SerializeField] private float shoveRadius = 0.8f;
     [Tooltip("Distance out in front of the player center to check for targets.")]
     [SerializeField] private float shoveOffsetDistance = 0.9f;
+
+    [Header("New Whiff & Stagger Mechanical Profiles")]
+    [SerializeField] private float shoveLungeForceWhiff = 6f;
+    [SerializeField] private float shoveLungeForceEvaded = 12f;
+    [Space]
+    [Tooltip("Scenario A: Duration in seconds to slow down actions when missing a shove.")]
+    public float whiffRecoveryDuration = 2.0f;
+    [SerializeField] private float whiffSpeedMultiplier = 0.5f;
+    [SerializeField] private float whiffRotationMultiplier = 0.5f;
+    [Space]
+    [Tooltip("Scenario B: Duration in seconds for staggered state if your shove gets dodged.")]
+    public float staggerDuration = 2.0f;
+    [SerializeField] private float staggerSpeedMultiplier = 0.25f;
+    [SerializeField] private float staggerRotationMultiplier = 0.2f;
+    [Space]
+    [Tooltip("Scenario B Reward: How long the lucky dodger keeps their speed boost.")]
+    public float dodgerBoostDuration = 2.0f;
+    [Tooltip("Multiplier value added to base speed when perfectly dodging (e.g., 1.35 = 35% faster).")]
+    [SerializeField] private float dodgerSpeedBoostMultiplier = 1.35f;
 
     [Header("Juice & Knockback Physics Curves")]
     [SerializeField] private AnimationCurve knockbackCurve = AnimationCurve.Linear(0, 1, 1, 0);
     [SerializeField] private float knockbackDuration = 0.45f;
 
     [Header("Debug & Safety Configuration")]
-    [Tooltip("If true, ignores layer setup and hits ANY Rigidbody2D nearby (Great for debugging!).")]
+    [Tooltip("If true, ignores layer setup and hits ANY Rigidbody2D nearby.")]
     [SerializeField] private bool hitAnythingWithRigidbody = true;
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private bool showDebugTraces = true;
@@ -41,19 +59,28 @@ public class TopDownMovement : MonoBehaviour
     private float lastDodgeTime = -999f;
     private float lastPushTime = -999f;
 
-    // --- NEW ENGINE ATTR_VARIABLES ---
+    // --- GAME ENGINE SYSTEM SYSTEM VARIABLES ---
     [HideInInspector] public int playerIndex = 0;
-    [HideInInspector] public int lastAttackerIndex = -1; // -1 means no one has hit them yet
-    [HideInInspector] public int consecutiveHitCount = 0; // Tracking for Combo KOs
-    [HideInInspector] public bool hasDealtDamageThisRound = false; // Engagement Check
+    [HideInInspector] public int lastAttackerIndex = -1;
+    [HideInInspector] public int consecutiveHitCount = 0;
+    [HideInInspector] public bool hasDealtDamageThisRound = false;
 
-    // Dynamic penalty scaling if the player didn't engage last round
     [HideInInspector] public float currentKnockbackReceivedMultiplier = 1.0f;
 
     private bool isBeingKnockedBack = false;
     private Vector2 knockbackDirection;
     private float knockbackMaxForce;
     private float knockbackTimer;
+
+    // Dynamic State Trackers
+    private bool isInsideWhiffRecovery = false;
+    private bool isStaggered = false;
+    private float dynamicSpeedModifier = 1.0f;
+    private float dynamicRotationModifier = 1.0f;
+
+    // Public properties to share state checks safely across instances
+    public bool IsDodging => isDodging;
+    public bool CanAct => !isDodging && !isInsideWhiffRecovery && !isStaggered && !isBeingKnockedBack;
 
     private void Awake()
     {
@@ -77,24 +104,32 @@ public class TopDownMovement : MonoBehaviour
     {
         if (controls == null) return;
 
+        // Process Dodge Intent
         if (controls.dodgePressed)
         {
-            if (Time.time - lastDodgeTime >= dodgeCooldown)
+            if (CanAct && (Time.time - lastDodgeTime >= dodgeCooldown))
             {
                 controls.ResetDodge();
                 PerformDodge();
             }
-            else controls.ResetDodge();
+            else
+            {
+                controls.ResetDodge(); // Consume input if button pressed during penalty windows
+            }
         }
 
+        // Process Push Intent
         if (controls.pushPressed)
         {
-            if (Time.time - lastPushTime >= pushCooldown)
+            if (CanAct && (Time.time - lastPushTime >= pushCooldown))
             {
                 controls.ResetPush();
                 ExecuteInstantShove();
             }
-            else controls.ResetPush();
+            else
+            {
+                controls.ResetPush(); // Input drop tracking safely managed
+            }
         }
     }
 
@@ -113,7 +148,6 @@ public class TopDownMovement : MonoBehaviour
             else
             {
                 float currentForceMultiplier = knockbackCurve.Evaluate(progress);
-                // Apply the incoming force multiplied by any passive danger penalty multiplier!
                 rb.linearVelocity = knockbackDirection * (knockbackMaxForce * currentForceMultiplier * currentKnockbackReceivedMultiplier);
             }
             return;
@@ -127,19 +161,23 @@ public class TopDownMovement : MonoBehaviour
     {
         if (controls == null) return;
 
+        // Calculate custom modifiers based on active whiffs, staggers, or dodge boosts
+        float activeRotationSpeed = rotationSpeed * dynamicRotationModifier;
+        float activeMoveSpeed = moveSpeed * dynamicSpeedModifier;
+
         if (controls.rotateRightHeld)
         {
-            float rotAmount = -1f * rotationSpeed * Time.fixedDeltaTime;
+            float rotAmount = -1f * activeRotationSpeed * Time.fixedDeltaTime;
             rb.MoveRotation(rb.rotation + rotAmount);
         }
 
         if (controls.moveForwardHeld)
         {
-            rb.linearVelocity = (Vector2)transform.up * moveSpeed;
+            rb.linearVelocity = (Vector2)transform.up * activeMoveSpeed;
         }
         else
         {
-            if (rb.linearVelocity.magnitude <= moveSpeed + 0.1f)
+            if (rb.linearVelocity.magnitude <= activeMoveSpeed + 0.1f)
             {
                 rb.linearVelocity = Vector2.zero;
             }
@@ -153,7 +191,6 @@ public class TopDownMovement : MonoBehaviour
         knockbackMaxForce = force;
         knockbackTimer = 0f;
 
-        // Track combo states if hit consecutively by the same attacker
         if (lastAttackerIndex == attackerID)
         {
             consecutiveHitCount++;
@@ -201,34 +238,103 @@ public class TopDownMovement : MonoBehaviour
         LayerMask targetMask = hitAnythingWithRigidbody ? ~0 : playerLayer;
         Collider2D[] hitColliders = Physics2D.OverlapCircleAll(strikeOrigin, shoveRadius, targetMask);
 
+        TopDownMovement targetOpponent = null;
+
         foreach (var col in hitColliders)
         {
             if (col.gameObject == gameObject || col.transform.IsChildOf(transform) || col.isTrigger)
                 continue;
 
             Rigidbody2D enemyRb = col.attachedRigidbody != null ? col.attachedRigidbody : col.GetComponentInParent<Rigidbody2D>();
-
-            if (enemyRb != null)
+            if (enemyRb != null && enemyRb.gameObject != gameObject)
             {
-                if (enemyRb.gameObject == gameObject) continue;
-
                 if (enemyRb.TryGetComponent<TopDownMovement>(out var enemyMovement))
                 {
-                    if (enemyMovement.isDodging) continue;
-
-                    // Flag that this player actively engaged in combat
-                    this.hasDealtDamageThisRound = true;
-
-                    // Pass our player index to the victim for KO credit processing
-                    enemyMovement.ApplyExplosiveKnockback(dir, pushForce, this.playerIndex);
-
-                    if (JuiceManager.Instance != null)
-                    {
-                        JuiceManager.Instance.TriggerImpactJuice(0.06f, 0.15f, 0.12f, 0.15f);
-                    }
-                    return;
+                    targetOpponent = enemyMovement;
+                    break; // Found our prime combat target reference
                 }
             }
+        }
+
+        // --- SCENARIO A: WHIFF (No valid target in front) ---
+        if (targetOpponent == null)
+        {
+            // Lunge Forward force application
+            rb.AddForce(dir * shoveLungeForceWhiff, ForceMode2D.Impulse);
+
+            // Execute 2-Second slow down penalty routine
+            StartCoroutine(WhiffRecoveryRoutine());
+            return;
+        }
+
+        // --- SCENARIO B: EVADED (Target was caught but is currently executing a dodge) ---
+        if (targetOpponent.IsDodging)
+        {
+            // Lunges forward significantly further past them
+            rb.AddForce(dir * shoveLungeForceEvaded, ForceMode2D.Impulse);
+
+            // Enters full Staggered State profile
+            StartCoroutine(AttackerStaggerRoutine());
+
+            // Reward target/dodger with an instant temporary speed boost
+            targetOpponent.RewardPerfectDodgeBoost(dodgerBoostDuration);
+            return;
+        }
+
+        // --- SCENARIO C: STANDARD VALID IMPACT ---
+        this.hasDealtDamageThisRound = true;
+        targetOpponent.ApplyExplosiveKnockback(dir, pushForce, this.playerIndex);
+
+        if (JuiceManager.Instance != null)
+        {
+            JuiceManager.Instance.TriggerImpactJuice(0.06f, 0.15f, 0.12f, 0.15f);
+        }
+    }
+
+    // SCENARIO A: WHIFF ACTION SLOWDOWN
+    private IEnumerator WhiffRecoveryRoutine()
+    {
+        isInsideWhiffRecovery = true;
+        dynamicSpeedModifier = whiffSpeedMultiplier;
+        dynamicRotationModifier = whiffRotationMultiplier;
+
+        yield return new WaitForSeconds(whiffRecoveryDuration);
+
+        dynamicSpeedModifier = 1.0f;
+        dynamicRotationModifier = 1.0f;
+        isInsideWhiffRecovery = false;
+    }
+
+    // SCENARIO B: ATTACKER STAGGER RECOVERY
+    private IEnumerator AttackerStaggerRoutine()
+    {
+        isStaggered = true;
+        dynamicSpeedModifier = staggerSpeedMultiplier;
+        dynamicRotationModifier = staggerRotationMultiplier;
+
+        yield return new WaitForSeconds(staggerDuration);
+
+        dynamicSpeedModifier = 1.0f;
+        dynamicRotationModifier = 1.0f;
+        isStaggered = false;
+    }
+
+    // SCENARIO B: REWARD SYSTEM COROUTINE
+    public void RewardPerfectDodgeBoost(float duration)
+    {
+        StartCoroutine(SpeedBoostDurationRoutine(duration));
+    }
+
+    private IEnumerator SpeedBoostDurationRoutine(float duration)
+    {
+        dynamicSpeedModifier = dodgerSpeedBoostMultiplier;
+
+        yield return new WaitForSeconds(duration);
+
+        // Reset speed modifier if we aren't currently clamped by an active penalty state
+        if (!isStaggered && !isInsideWhiffRecovery)
+        {
+            dynamicSpeedModifier = 1.0f;
         }
     }
 

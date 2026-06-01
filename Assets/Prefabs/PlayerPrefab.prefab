@@ -199,14 +199,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 4
-  rotationSpeed: 400
+  rotationSpeed: 200
   dodgeDistance: 2
-  dodgeSpeed: 10
+  dodgeSpeed: 7
   dodgeCooldown: 0
   pushForce: 15
   pushCooldown: 0
   shoveRadius: 0.5
   shoveOffsetDistance: 0.7
+  shoveLungeForceWhiff: 2
+  shoveLungeForceEvaded: 5
+  whiffRecoveryDuration: 2
+  whiffSpeedMultiplier: 0.5
+  whiffRotationMultiplier: 0.5
+  staggerDuration: 2
+  staggerSpeedMultiplier: 0.25
+  staggerRotationMultiplier: 0.2
+  dodgerBoostDuration: 2
+  dodgerSpeedBoostMultiplier: 1.35
   knockbackCurve:
     serializedVersion: 2
     m_Curve:
@@ -238,6 +248,11 @@ MonoBehaviour:
     m_Bits: 8
   showDebugTraces: 1
   controls: {fileID: 0}
+  playerIndex: 0
+  lastAttackerIndex: -1
+  consecutiveHitCount: 0
+  hasDealtDamageThisRound: 0
+  currentKnockbackReceivedMultiplier: 1
 --- !u!58 &4173017688939700229
 CircleCollider2D:
   m_ObjectHideFlags: 0

@@ -1,0 +1,1007 @@
+fileFormatVersion: 2
+guid: 6b67031b900b9eb43b481ad2c90c1cbe
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 2748809175139857273
+    second: Sumo Sprites_0
+  - first:
+      213: 1521729663720073212
+    second: Sumo Sprites_1
+  - first:
+      213: -846051552268663385
+    second: Sumo Sprites_2
+  - first:
+      213: -3770425132601759644
+    second: Sumo Sprites_3
+  - first:
+      213: 8554938689820694643
+    second: Sumo Sprites_4
+  - first:
+      213: -2248303184979104489
+    second: Sumo Sprites_5
+  - first:
+      213: -1732170726814983110
+    second: Sumo Sprites_6
+  - first:
+      213: 3787728877684311730
+    second: Sumo Sprites_7
+  - first:
+      213: -6867078266100971890
+    second: Sumo Sprites_8
+  - first:
+      213: 4810532433127314687
+    second: Sumo Sprites_9
+  - first:
+      213: -838093083067203207
+    second: Sumo Sprites_10
+  - first:
+      213: -7320579968967861679
+    second: Sumo Sprites_11
+  - first:
+      213: -7352662854448009700
+    second: Sumo Sprites_12
+  - first:
+      213: 7088584179398462552
+    second: Sumo Sprites_13
+  - first:
+      213: -6657316596243863172
+    second: Sumo Sprites_14
+  - first:
+      213: 788834146598704375
+    second: Sumo Sprites_15
+  - first:
+      213: 5765112525985297702
+    second: Sumo Sprites_16
+  - first:
+      213: -8563502488406043689
+    second: Sumo Sprites_17
+  - first:
+      213: -4489600886548191866
+    second: Sumo Sprites_18
+  - first:
+      213: -6405473377040701416
+    second: Sumo Sprites_19
+  - first:
+      213: 503214199556149367
+    second: Sumo Sprites_20
+  - first:
+      213: -1450499620599381594
+    second: Sumo Sprites_21
+  - first:
+      213: 1203966542201489517
+    second: Sumo Sprites_22
+  - first:
+      213: -6622928254780175759
+    second: Sumo Sprites_23
+  - first:
+      213: 6930207649826692720
+    second: Sumo Sprites_24
+  - first:
+      213: 6086560777283502330
+    second: Sumo Sprites_25
+  - first:
+      213: 219164148940877682
+    second: Sumo Sprites_26
+  - first:
+      213: -7038865585291717327
+    second: Sumo Sprites_27
+  - first:
+      213: -5753386247891220019
+    second: Sumo Sprites_28
+  - first:
+      213: -4010937613941367761
+    second: Sumo Sprites_29
+  - first:
+      213: -5236992440572999480
+    second: Sumo Sprites_30
+  - first:
+      213: -7768604922698334031
+    second: Sumo Sprites_31
+  - first:
+      213: -5160180380894392206
+    second: Sumo Sprites_32
+  - first:
+      213: -653303486863189170
+    second: Sumo Sprites_33
+  - first:
+      213: -28043655593865604
+    second: Sumo Sprites_34
+  - first:
+      213: 3494498603552564908
+    second: Sumo Sprites_35
+  - first:
+      213: -1038404510692670472
+    second: Sumo Sprites_36
+  - first:
+      213: 5258791414606089596
+    second: Sumo Sprites_37
+  - first:
+      213: 6314867665200584247
+    second: Sumo Sprites_38
+  - first:
+      213: -1783202849658000429
+    second: Sumo Sprites_39
+  - first:
+      213: 7528164695507016073
+    second: Sumo Sprites_40
+  - first:
+      213: -126212990866413446
+    second: Sumo Sprites_41
+  - first:
+      213: -7428694154667886062
+    second: Sumo Sprites_42
+  - first:
+      213: 4470023801436957982
+    second: Sumo Sprites_43
+  - first:
+      213: 3882309040351458955
+    second: Sumo Sprites_44
+  - first:
+      213: -9205665259077872141
+    second: Sumo Sprites_45
+  - first:
+      213: 884942471388197169
+    second: Sumo Sprites_46
+  - first:
+      213: -5900310130072621402
+    second: Sumo Sprites_47
+  - first:
+      213: 2939334810081133724
+    second: Sumo Sprites_48
+  - first:
+      213: 1106690275416664111
+    second: Sumo Sprites_49
+  - first:
+      213: 7589205783175916620
+    second: Sumo Sprites_50
+  - first:
+      213: 8921217674948728244
+    second: Sumo Sprites_51
+  - first:
+      213: 1272789937869444008
+    second: Sumo Sprites_52
+  - first:
+      213: 5337945662546291453
+    second: Sumo Sprites_53
+  - first:
+      213: 6572823155538242813
+    second: Sumo Sprites_54
+  - first:
+      213: 5976145961232766852
+    second: Sumo Sprites_55
+  - first:
+      213: 7689965987706152199
+    second: Sumo Sprites_56
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Sumo Sprites_0
+      rect:
+        serializedVersion: 2
+        x: 296
+        y: 907
+        width: 7
+        height: 5
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 973bb87816bb52620800000000000000
+      internalID: 2748809175139857273
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_1
+      rect:
+        serializedVersion: 2
+        x: 303
+        y: 908
+        width: 9
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cf7a53211154e1510800000000000000
+      internalID: 1521729663720073212
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_2
+      rect:
+        serializedVersion: 2
+        x: 608
+        y: 592
+        width: 284
+        height: 320
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7a5cb5588983244f0800000000000000
+      internalID: -846051552268663385
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_3
+      rect:
+        serializedVersion: 2
+        x: 1044
+        y: 636
+        width: 300
+        height: 361
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46821178152ccabc0800000000000000
+      internalID: -3770425132601759644
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_4
+      rect:
+        serializedVersion: 2
+        x: 168
+        y: 600
+        width: 289
+        height: 307
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3781202996f39b670800000000000000
+      internalID: 8554938689820694643
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_5
+      rect:
+        serializedVersion: 2
+        x: 892
+        y: 744
+        width: 4
+        height: 12
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 71de0ff4a2c6cc0e0800000000000000
+      internalID: -2248303184979104489
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_6
+      rect:
+        serializedVersion: 2
+        x: 996
+        y: 708
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a3cdcd1c6e716f7e0800000000000000
+      internalID: -1732170726814983110
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_7
+      rect:
+        serializedVersion: 2
+        x: 996
+        y: 692
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b6ccd39857b09430800000000000000
+      internalID: 3787728877684311730
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_8
+      rect:
+        serializedVersion: 2
+        x: 996
+        y: 676
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e860f3843bc33b0a0800000000000000
+      internalID: -6867078266100971890
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_9
+      rect:
+        serializedVersion: 2
+        x: 996
+        y: 668
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff49c09b2c172c240800000000000000
+      internalID: 4810532433127314687
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_10
+      rect:
+        serializedVersion: 2
+        x: 996
+        y: 660
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 971411708ce7e54f0800000000000000
+      internalID: -838093083067203207
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_11
+      rect:
+        serializedVersion: 2
+        x: 996
+        y: 548
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 15a94d7ed43186a90800000000000000
+      internalID: -7320579968967861679
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_12
+      rect:
+        serializedVersion: 2
+        x: 159
+        y: 160
+        width: 323
+        height: 280
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1eaa67071816f990800000000000000
+      internalID: -7352662854448009700
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_13
+      rect:
+        serializedVersion: 2
+        x: 996
+        y: 404
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 85ccf7511c5bf5260800000000000000
+      internalID: 7088584179398462552
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_14
+      rect:
+        serializedVersion: 2
+        x: 84
+        y: 352
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c796293e3d57c93a0800000000000000
+      internalID: -6657316596243863172
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_15
+      rect:
+        serializedVersion: 2
+        x: 575
+        y: 172
+        width: 387
+        height: 208
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7f4d6b61a7082fa00800000000000000
+      internalID: 788834146598704375
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_16
+      rect:
+        serializedVersion: 2
+        x: 996
+        y: 356
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 62532892c4bc10050800000000000000
+      internalID: 5765112525985297702
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_17
+      rect:
+        serializedVersion: 2
+        x: 1016
+        y: 160
+        width: 383
+        height: 225
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7d35261bbd3582980800000000000000
+      internalID: -8563502488406043689
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_18
+      rect:
+        serializedVersion: 2
+        x: 996
+        y: 348
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6852406d7cbb1b1c0800000000000000
+      internalID: -4489600886548191866
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_19
+      rect:
+        serializedVersion: 2
+        x: 996
+        y: 340
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8186447b6ef2b17a0800000000000000
+      internalID: -6405473377040701416
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_20
+      rect:
+        serializedVersion: 2
+        x: 84
+        y: 308
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7701a7af5a6cbf600800000000000000
+      internalID: 503214199556149367
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_21
+      rect:
+        serializedVersion: 2
+        x: 84
+        y: 224
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6a1c557b74acedbe0800000000000000
+      internalID: -1450499620599381594
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_22
+      rect:
+        serializedVersion: 2
+        x: 84
+        y: 96
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d680065f03955b010800000000000000
+      internalID: 1203966542201489517
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_23
+      rect:
+        serializedVersion: 2
+        x: 84
+        y: 64
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 17a0ee097d1a614a0800000000000000
+      internalID: -6622928254780175759
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_24
+      rect:
+        serializedVersion: 2
+        x: 996
+        y: 44
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 07e5d93c32b0d2060800000000000000
+      internalID: 6930207649826692720
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_25
+      rect:
+        serializedVersion: 2
+        x: 996
+        y: 36
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: af00fc967cec77450800000000000000
+      internalID: 6086560777283502330
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_26
+      rect:
+        serializedVersion: 2
+        x: 84
+        y: 24
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 27f2f1dd1a0aa0300800000000000000
+      internalID: 219164148940877682
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_27
+      rect:
+        serializedVersion: 2
+        x: 996
+        y: 20
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13517fe2b0de05e90800000000000000
+      internalID: -7038865585291717327
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_28
+      rect:
+        serializedVersion: 2
+        x: 1088
+        y: 12
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dc983d6b0bdd720b0800000000000000
+      internalID: -5753386247891220019
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Sumo Sprites_29
+      rect:
+        serializedVersion: 2
+        x: 1088
+        y: 4
+        width: 4
+        height: 4
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f2c95c0bd794658c0800000000000000
+      internalID: -4010937613941367761
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 6556b86a0ede66b48ab641599346f7cc
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":0,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      Sumo Sprites_0: 2748809175139857273
+      Sumo Sprites_1: 1521729663720073212
+      Sumo Sprites_10: -838093083067203207
+      Sumo Sprites_11: -7320579968967861679
+      Sumo Sprites_12: -7352662854448009700
+      Sumo Sprites_13: 7088584179398462552
+      Sumo Sprites_14: -6657316596243863172
+      Sumo Sprites_15: 788834146598704375
+      Sumo Sprites_16: 5765112525985297702
+      Sumo Sprites_17: -8563502488406043689
+      Sumo Sprites_18: -4489600886548191866
+      Sumo Sprites_19: -6405473377040701416
+      Sumo Sprites_2: -846051552268663385
+      Sumo Sprites_20: 503214199556149367
+      Sumo Sprites_21: -1450499620599381594
+      Sumo Sprites_22: 1203966542201489517
+      Sumo Sprites_23: -6622928254780175759
+      Sumo Sprites_24: 6930207649826692720
+      Sumo Sprites_25: 6086560777283502330
+      Sumo Sprites_26: 219164148940877682
+      Sumo Sprites_27: -7038865585291717327
+      Sumo Sprites_28: -5753386247891220019
+      Sumo Sprites_29: -4010937613941367761
+      Sumo Sprites_3: -3770425132601759644
+      Sumo Sprites_30: 1138214081
+      Sumo Sprites_4: 8554938689820694643
+      Sumo Sprites_5: -2248303184979104489
+      Sumo Sprites_6: -1732170726814983110
+      Sumo Sprites_7: 3787728877684311730
+      Sumo Sprites_8: -6867078266100971890
+      Sumo Sprites_9: 4810532433127314687
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
