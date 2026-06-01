@@ -110,7 +110,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 4
+  m_SortingOrder: 8
   m_MaskInteraction: 0
   m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -207,16 +207,12 @@ MonoBehaviour:
   pushCooldown: 0
   shoveRadius: 0.5
   shoveOffsetDistance: 0.7
-  shoveLungeForceWhiff: 2
-  shoveLungeForceEvaded: 5
-  whiffRecoveryDuration: 2
-  whiffSpeedMultiplier: 0.5
-  whiffRotationMultiplier: 0.5
-  staggerDuration: 2
-  staggerSpeedMultiplier: 0.25
-  staggerRotationMultiplier: 0.2
-  dodgerBoostDuration: 2
-  dodgerSpeedBoostMultiplier: 1.35
+  shoveLungeForce: 12
+  lungeDuration: 0.15
+  whiffCooldownPenalty: 0.8
+  minimumVelocityThreshold: 1.5
+  intentionalDirectionThreshold: 0.25
+  trackingWindowDuration: 2
   knockbackCurve:
     serializedVersion: 2
     m_Curve:
@@ -248,8 +244,10 @@ MonoBehaviour:
     m_Bits: 8
   showDebugTraces: 1
   controls: {fileID: 0}
+  isDodging: 0
   playerIndex: 0
   lastAttackerIndex: -1
+  lastInteractionTimestamp: -999
   consecutiveHitCount: 0
   hasDealtDamageThisRound: 0
   currentKnockbackReceivedMultiplier: 1
@@ -368,7 +366,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 4
+  m_SortingOrder: 7
   m_MaskInteraction: 0
   m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
   m_Color: {r: 0.8078432, g: 0.1764706, b: 0.16470589, a: 1}

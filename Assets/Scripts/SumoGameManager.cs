@@ -15,6 +15,7 @@ public class SumoGameManager : MonoBehaviour
     [SerializeField] private GameObject characterSelectPanel;
     [SerializeField] private GameObject gameplayUIPanel;
     [SerializeField] private GameObject pauseMenuPanel;
+    [SerializeField] private PauseManager pauseButtonManager;
     [SerializeField] private TextMeshProUGUI timerText;
 
     [Header("Round Announcement Settings")]
@@ -43,6 +44,7 @@ public class SumoGameManager : MonoBehaviour
     private float currentTimer;
     private bool isRoundActive = false;
     private bool isGamePaused = false;
+    private bool isMatchOngoing = false;
 
     private int[] playerScores = new int[4];
     private int teamAScore = 0;
@@ -54,7 +56,7 @@ public class SumoGameManager : MonoBehaviour
 
     private List<GameObject> activeWrestlersInRound = new List<GameObject>();
     private List<GameObject> eliminatedThisRound = new List<GameObject>();
-    private GameObject[] spawnedControlUIs = new GameObject[4];
+    public GameObject[] spawnedControlUIs = new GameObject[4];
 
     private bool isSuddenDeathActive = false;
     private int suddenDeathPlayerA = -1;
@@ -96,6 +98,7 @@ public class SumoGameManager : MonoBehaviour
     {
         activeGameMode = GameMode.Versus;
         if (modeSelectPanel != null) modeSelectPanel.SetActive(false);
+        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
         characterSelectPanel.SetActive(true);
     }
 
@@ -105,10 +108,12 @@ public class SumoGameManager : MonoBehaviour
         activePlayerCount = 4;
 
         if (modeSelectPanel != null) modeSelectPanel.SetActive(false);
+        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
         characterSelectPanel.SetActive(false);
         gameplayUIPanel.SetActive(true);
 
         ResetMatchDataFull();
+        isMatchOngoing = true;
         StartNewRound();
     }
 
@@ -118,8 +123,24 @@ public class SumoGameManager : MonoBehaviour
         activePlayerCount = Mathf.Clamp(count, 2, 4);
         characterSelectPanel.SetActive(false);
         gameplayUIPanel.SetActive(true);
+        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
 
         ResetMatchDataFull();
+        isMatchOngoing = true;
+        StartNewRound();
+    }
+
+    public void LaunchMatchLive(int totalPlayers, int[] cosmeticSkins)
+    {
+        activePlayerCount = totalPlayers;
+        if (characterSelectPanel != null) characterSelectPanel.SetActive(false);
+        if (gameplayUIPanel != null) gameplayUIPanel.SetActive(true);
+
+        ResetMatchDataFull();
+        isMatchOngoing = true;
+
+        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(true);
+
         StartNewRound();
     }
 
@@ -143,15 +164,12 @@ public class SumoGameManager : MonoBehaviour
 
     private void StartNewRound()
     {
+        isRoundActive = false;
+        Time.timeScale = 1f; // RESET CLOCK SPEED TO NORMAL
+        StopAllCoroutines();
         ClearMatchData();
 
-        if (roundWinnerAnnounceText != null)
-        {
-            roundWinnerAnnounceText.text = "";
-            roundWinnerAnnounceText.gameObject.SetActive(false);
-        }
-
-        if (timerText != null) timerText.gameObject.SetActive(true);
+        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
 
         isSuddenDeathActive = false;
         if (currentRound == 1) ResetRingsToDefault();
@@ -159,7 +177,28 @@ public class SumoGameManager : MonoBehaviour
         SpawnPlayersAndUI(activePlayerCount, spawnRadiusFromCenter);
 
         currentTimer = roundDurationSeconds;
+
+        // Run the custom countdown intro sequentially using your original announcement framework
+        StartCoroutine(IntroCountdownSequence());
+    }
+
+    private IEnumerator IntroCountdownSequence()
+    {
+        string headerText = activeGameMode == GameMode.Versus ? $"ROUND {currentRound}" : $"TEAM BATTLE - ROUND {currentRound}";
+        DisplayRoundEndNotification(headerText);
+        yield return new WaitForSeconds(1.5f);
+
+        DisplayRoundEndNotification("READY...");
+        yield return new WaitForSeconds(1.0f);
+
+        DisplayRoundEndNotification("FIGHT!");
+
+        // --- GAME ACTIVATION POINT ---
+        Time.timeScale = 1f; // FORCE TIME TO RUN UNPAUSED
         isRoundActive = true;
+
+        yield return new WaitForSeconds(1.0f);
+        DisplayRoundEndNotification(""); // Clears banner overlay completely and activates standard control layers via your logic
     }
 
     private void Update()
@@ -167,7 +206,7 @@ public class SumoGameManager : MonoBehaviour
         if (!isRoundActive || isGamePaused) return;
 
         currentTimer -= Time.deltaTime;
-        if (timerText != null) timerText.text = Mathf.CeilToInt(currentTimer).ToString();
+        if (timerText != null) timerText.text = Mathf.Max(0, Mathf.CeilToInt(currentTimer)).ToString();
 
         if (currentTimer <= 0)
         {
@@ -278,12 +317,10 @@ public class SumoGameManager : MonoBehaviour
         activeWrestlersInRound.Remove(victimObj);
         eliminatedThisRound.Add(victimObj);
 
-        // --- NEW LOGIC: VALIDATE LAST INTERACTION TIMEFRAME ---
         if (victimMovement != null && victimMovement.lastAttackerIndex != -1)
         {
             float elapsedSinceLastHit = Time.time - victimMovement.lastInteractionTimestamp;
 
-            // If the push happened within the valid window (e.g., 2 seconds), award the point!
             if (elapsedSinceLastHit <= victimMovement.trackingWindowDuration)
             {
                 int killerIdx = victimMovement.lastAttackerIndex;
@@ -538,6 +575,7 @@ public class SumoGameManager : MonoBehaviour
         if (!gameplayUIPanel.activeSelf) return;
         isGamePaused = !isGamePaused;
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(isGamePaused);
+        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
         Time.timeScale = isGamePaused ? 0f : 1f;
     }
 
@@ -549,9 +587,9 @@ public class SumoGameManager : MonoBehaviour
 
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
         if (modeSelectPanel != null) modeSelectPanel.SetActive(true);
+        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(true);
         characterSelectPanel.SetActive(false);
         gameplayUIPanel.SetActive(false);
-
         ClearMatchData();
     }
 
@@ -598,7 +636,7 @@ public class SumoGameManager : MonoBehaviour
         }
     }
 
-    private void DisplayRoundEndNotification(string displayMessage)
+    public void DisplayRoundEndNotification(string displayMessage)
     {
         if (roundWinnerAnnounceText != null)
         {
@@ -607,13 +645,12 @@ public class SumoGameManager : MonoBehaviour
                 roundWinnerAnnounceText.gameObject.SetActive(false);
                 if (timerText != null) timerText.gameObject.SetActive(true);
 
-                // --- ROUND STARTING: Re-enable all active player UI controls ---
+                // --- LIVE RUNNING GAMEPLAY: Enable Pause Button ---
+                if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(true);
+
                 for (int i = 0; i < spawnedControlUIs.Length; i++)
                 {
-                    if (spawnedControlUIs[i] != null)
-                    {
-                        spawnedControlUIs[i].SetActive(true);
-                    }
+                    if (spawnedControlUIs[i] != null) spawnedControlUIs[i].SetActive(true);
                 }
             }
             else
@@ -622,13 +659,12 @@ public class SumoGameManager : MonoBehaviour
                 roundWinnerAnnounceText.text = displayMessage;
                 if (timerText != null) timerText.gameObject.SetActive(false);
 
-                // --- ROUND OVER: Hide all player UI controls while announcement is shown ---
+                // --- IN MENUS / ANNOUNCEMENT INTERMISSIONS: Disable Pause Button ---
+                if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
+
                 for (int i = 0; i < spawnedControlUIs.Length; i++)
                 {
-                    if (spawnedControlUIs[i] != null)
-                    {
-                        spawnedControlUIs[i].SetActive(false);
-                    }
+                    if (spawnedControlUIs[i] != null) spawnedControlUIs[i].SetActive(false);
                 }
             }
         }
@@ -671,6 +707,36 @@ public class SumoGameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(delayDuration);
         ReturnToHomeScreenHub();
+    }
+
+    public void RestartCurrentMatchSetup()
+    {
+        StopAllCoroutines();
+
+        // 1. Clear characters and instantiated inputs from the previous loop iteration
+        ClearMatchData();
+
+        // 2. Wipe active player round scoreboard values back to zero
+        for (int i = 0; i < playerScores.Length; i++)
+        {
+            playerScores[i] = 0;
+        }
+
+        // 3. Clear banner announcements and show the timer layer
+        if (roundWinnerAnnounceText != null)
+        {
+            roundWinnerAnnounceText.text = "";
+            roundWinnerAnnounceText.gameObject.SetActive(false);
+        }
+        if (timerText != null) timerText.gameObject.SetActive(true);
+
+        // 4. Force state tracking flags back into operational status
+        isMatchOngoing = true;
+
+        // 5. Notify the Pause Button that gameplay is actively running so it stays visible
+        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(true);
+
+        StartNewRound();
     }
 
     private void ClearMatchData()
