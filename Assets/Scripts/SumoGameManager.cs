@@ -280,15 +280,37 @@ public class SumoGameManager : MonoBehaviour
     {
         if (playerIdx < uiCornerAnchors.Length && uiCornerAnchors[playerIdx] != null)
         {
+            // 1. Instantiate the UI prefab under its corner anchor
             GameObject uiControl = Instantiate(mobileControlsUIPrefab, uiCornerAnchors[playerIdx]);
             spawnedControlUIs[playerIdx] = uiControl;
 
+            // --- DYNAMIC CORNER-FACING ROTATION SYSTEM ---
+            // Grab the UI anchor's position relative to the local canvas area
+            Vector3 anchorLocalPosition = uiCornerAnchors[playerIdx].localPosition;
+
+            // Calculate the vector pointing from the screen center (0,0,0) out to the corner anchor
+            Vector3 directionToCorner = anchorLocalPosition - Vector3.zero;
+
+            // Convert the structural vector direction into angles
+            float angleRad = Mathf.Atan2(directionToCorner.y, directionToCorner.x);
+            float angleDeg = angleRad * Mathf.Rad2Deg;
+
+            // Offset the math depending on your prefab design layout.
+            // Adjust the "- 90f" below to "0f", "90f", or "180f" if the pads spawn sideways/upside down.
+            float targetZRotation = angleDeg - -90f;
+
+            // Assign the rotation matrix to the player control layout component
+            uiControl.transform.localRotation = Quaternion.Euler(0f, 0f, targetZRotation);
+            // ---------------------------------------------
+
+            // 2. Tint button graphics to match the player color
             Image[] buttonBackgrounds = uiControl.GetComponentsInChildren<Image>();
             foreach (var img in buttonBackgrounds)
             {
                 if (img.gameObject != uiControl) img.color = identityColor * 0.85f;
             }
 
+            // 3. Connect to the player input script components
             MobileControls inputBridge = uiControl.GetComponent<MobileControls>();
             TopDownMovement movementController = playerObj.GetComponent<TopDownMovement>();
 
@@ -573,9 +595,15 @@ public class SumoGameManager : MonoBehaviour
     public void TogglePauseGameSystem()
     {
         if (!gameplayUIPanel.activeSelf) return;
+
         isGamePaused = !isGamePaused;
+
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(isGamePaused);
-        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
+
+        // --- FIXED LINE ---
+        // If game is paused, gameplay state is false. If game is running (not paused), gameplay state is true.
+        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(!isGamePaused);
+
         Time.timeScale = isGamePaused ? 0f : 1f;
     }
 

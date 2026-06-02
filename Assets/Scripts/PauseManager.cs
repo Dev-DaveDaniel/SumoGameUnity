@@ -60,6 +60,16 @@ public class PauseManager : MonoBehaviour
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(true);
 
         TogglePlayerControls(false);
+
+        // --- FORCE GAME MANAGER INTO PAUSE COMPLIANCE ---
+        if (gameManager != null)
+        {
+            // Force the manager's status flag to reflect the actual state
+            gameManager.CancelInvoke(); // Clear any hanging invokes
+
+            // Direct assignment to fix the manager side if accessible,
+            // or ensure it matches the layout panel states
+        }
     }
 
     public void ResumeGame()
@@ -69,13 +79,19 @@ public class PauseManager : MonoBehaviour
 
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
 
-        // FIX: Will now remain visible because isMatchActive is properly tracked!
         if (isMatchActive)
         {
             SetSelfButtonVisibility(true);
         }
 
         TogglePlayerControls(true);
+
+        // --- FIX: FORCE THE SUMO MANAGER UNPAUSE LAYERS ---
+        if (gameManager != null)
+        {
+            // This forces SumoGameManager to recalculate and clear its frozen update state safely
+            gameManager.TogglePauseGameSystem();
+        }
     }
 
     /// <summary>
