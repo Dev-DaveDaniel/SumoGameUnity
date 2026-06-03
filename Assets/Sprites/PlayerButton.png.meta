@@ -1,13 +1,10 @@
 fileFormatVersion: 2
-guid: a470976e75dbd5a4d850c42d5709a522
+guid: ee9a667b17c956349ab3f7d6cffbc123
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -4781373940957465942
-    second: exit_0
-  - first:
-      213: 2577959780943527813
-    second: exit_1
+      213: -6366759895238522898
+    second: PlayerButton_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -49,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 1
+  spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
@@ -129,13 +126,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: exit_0
+      name: PlayerButton_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 169
-        width: 364
-        height: 174
+        x: 222
+        y: 114
+        width: 283
+        height: 324
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -144,30 +141,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: aa2bbe6cbb525adb0800000000000000
-      internalID: -4781373940957465942
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: exit_1
-      rect:
-        serializedVersion: 2
-        x: 148
-        y: 0
-        width: 364
-        height: 512
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 58ff16c13c0c6c320800000000000000
-      internalID: 2577959780943527813
+      spriteID: ee7ca1a9b99b4a7a0800000000000000
+      internalID: -6366759895238522898
       vertices: []
       indices: 
       edges: []
@@ -176,7 +151,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -186,8 +161,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      exit_0: -4781373940957465942
-      exit_1: 2577959780943527813
+      PlayerButton_0: -6366759895238522898
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
