@@ -43,6 +43,13 @@ public class TopDownMovement : MonoBehaviour
     [SerializeField] private AnimationCurve knockbackCurve = AnimationCurve.Linear(0, 1, 1, 0);
     [SerializeField] private float knockbackDuration = 0.45f;
 
+    [Header("Shove Audio Juice Engine")]
+    [Tooltip("The local AudioSource component attached to this player prefab.")]
+    [SerializeField] private AudioSource playerAudioSource;
+    [Tooltip("Add multiple unique grunt/swoosh variations here to cycle through when shoving.")]
+    [SerializeField] private AudioClip[] shoveAudioClips;
+    private int currentShoveAudioIndex = 0;
+
     [Header("Debug & Safety Configuration")]
     [SerializeField] private bool hitAnythingWithRigidbody = true;
     [SerializeField] private LayerMask playerLayer;
@@ -73,6 +80,12 @@ public class TopDownMovement : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+
+        // Auto-assign AudioSource if left blank in the Inspector layout
+        if (playerAudioSource == null)
+        {
+            playerAudioSource = GetComponent<AudioSource>();
+        }
 
         if (rb != null)
         {
@@ -254,7 +267,28 @@ public class TopDownMovement : MonoBehaviour
     private void ExecuteInstantShove()
     {
         lastPushTime = Time.time;
+
+        // --- AUDIO CYCLING INSTIGATION POOL ---
+        PlaySequentialShoveAudio();
+
         StartCoroutine(ShoveAttackRoutine());
+    }
+
+    private void PlaySequentialShoveAudio()
+    {
+        if (playerAudioSource == null || shoveAudioClips == null || shoveAudioClips.Length == 0) return;
+
+        // Extract clip variant located at pointer
+        AudioClip clipToPlay = shoveAudioClips[currentShoveAudioIndex];
+
+        if (clipToPlay != null)
+        {
+            // PlayOneShot prevents cutting off audio elements mid-clip if mashed quickly
+            playerAudioSource.PlayOneShot(clipToPlay);
+        }
+
+        // Advance to next index; loop back cleanly using the remainder operator
+        currentShoveAudioIndex = (currentShoveAudioIndex + 1) % shoveAudioClips.Length;
     }
 
     private IEnumerator ShoveAttackRoutine()

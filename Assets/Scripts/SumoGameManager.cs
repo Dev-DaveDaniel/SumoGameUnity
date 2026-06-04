@@ -38,6 +38,10 @@ public class SumoGameManager : MonoBehaviour
     [SerializeField] private List<SumoRingZone> arenaRings = new List<SumoRingZone>();
     private int currentActiveRingIndex = 0;
 
+    [Header("Audio Settings")]
+    [SerializeField] private AudioSource globalAudioSource;
+    [SerializeField] private AudioClip roundStartClip;
+
     private GameMode activeGameMode = GameMode.Versus;
     private int activePlayerCount = 2;
     private int currentRound = 1;
@@ -165,7 +169,7 @@ public class SumoGameManager : MonoBehaviour
     private void StartNewRound()
     {
         isRoundActive = false;
-        Time.timeScale = 1f; // RESET CLOCK SPEED TO NORMAL
+        Time.timeScale = 1f;
         StopAllCoroutines();
         ClearMatchData();
 
@@ -178,7 +182,6 @@ public class SumoGameManager : MonoBehaviour
 
         currentTimer = roundDurationSeconds;
 
-        // Run the custom countdown intro sequentially using your original announcement framework
         StartCoroutine(IntroCountdownSequence());
     }
 
@@ -193,12 +196,22 @@ public class SumoGameManager : MonoBehaviour
 
         DisplayRoundEndNotification("FIGHT!");
 
+        // --- AUDIO FIX: Only play if the music isn't already playing from a tie/seamless transition ---
+        if (globalAudioSource != null && roundStartClip != null)
+        {
+            if (!globalAudioSource.isPlaying)
+            {
+                globalAudioSource.clip = roundStartClip;
+                globalAudioSource.Play();
+            }
+        }
+
         // --- GAME ACTIVATION POINT ---
-        Time.timeScale = 1f; // FORCE TIME TO RUN UNPAUSED
+        Time.timeScale = 1f;
         isRoundActive = true;
 
         yield return new WaitForSeconds(1.0f);
-        DisplayRoundEndNotification(""); // Clears banner overlay completely and activates standard control layers via your logic
+        DisplayRoundEndNotification("");
     }
 
     private void Update()
@@ -280,37 +293,24 @@ public class SumoGameManager : MonoBehaviour
     {
         if (playerIdx < uiCornerAnchors.Length && uiCornerAnchors[playerIdx] != null)
         {
-            // 1. Instantiate the UI prefab under its corner anchor
             GameObject uiControl = Instantiate(mobileControlsUIPrefab, uiCornerAnchors[playerIdx]);
             spawnedControlUIs[playerIdx] = uiControl;
 
-            // --- DYNAMIC CORNER-FACING ROTATION SYSTEM ---
-            // Grab the UI anchor's position relative to the local canvas area
             Vector3 anchorLocalPosition = uiCornerAnchors[playerIdx].localPosition;
-
-            // Calculate the vector pointing from the screen center (0,0,0) out to the corner anchor
             Vector3 directionToCorner = anchorLocalPosition - Vector3.zero;
 
-            // Convert the structural vector direction into angles
             float angleRad = Mathf.Atan2(directionToCorner.y, directionToCorner.x);
             float angleDeg = angleRad * Mathf.Rad2Deg;
+            float targetZRotation = angleDeg + 90f;
 
-            // Offset the math depending on your prefab design layout.
-            // Adjust the "- 90f" below to "0f", "90f", or "180f" if the pads spawn sideways/upside down.
-            float targetZRotation = angleDeg - -90f;
-
-            // Assign the rotation matrix to the player control layout component
             uiControl.transform.localRotation = Quaternion.Euler(0f, 0f, targetZRotation);
-            // ---------------------------------------------
 
-            // 2. Tint button graphics to match the player color
             Image[] buttonBackgrounds = uiControl.GetComponentsInChildren<Image>();
             foreach (var img in buttonBackgrounds)
             {
                 if (img.gameObject != uiControl) img.color = identityColor * 0.85f;
             }
 
-            // 3. Connect to the player input script components
             MobileControls inputBridge = uiControl.GetComponent<MobileControls>();
             TopDownMovement movementController = playerObj.GetComponent<TopDownMovement>();
 
@@ -419,16 +419,23 @@ public class SumoGameManager : MonoBehaviour
 
         if (teamAScore >= teamRoundsToWin)
         {
+            // Stop audio when match is decisively won
+            if (globalAudioSource != null) globalAudioSource.Stop();
+
             StartCoroutine(DelayedBannerOverride("🏆 MATCH OVER 🏆\nRED TEAM HAS WON THE MATCH!", 3.5f));
             StartCoroutine(MatchEndReturnDelayRoutine(7f));
         }
         else if (teamBScore >= teamRoundsToWin)
         {
+            // Stop audio when match is decisively won
+            if (globalAudioSource != null) globalAudioSource.Stop();
+
             StartCoroutine(DelayedBannerOverride("🏆 MATCH OVER 🏆\nBLUE TEAM HAS WON THE MATCH!", 3.5f));
             StartCoroutine(MatchEndReturnDelayRoutine(7f));
         }
         else
         {
+            // It's a normal round transition (could be a tie or next round), audio KEEP PLAYING
             currentRound++;
             StartCoroutine(RoundTransitionDelayRoutine(5f));
         }
@@ -554,15 +561,25 @@ public class SumoGameManager : MonoBehaviour
 
         if (matchWon)
         {
+            // Match Won (15 points reached) -> STOP AUDIO
+            if (globalAudioSource != null) globalAudioSource.Stop();
+
             StartCoroutine(DelayedBannerOverride($"🏆 MATCH OVER 🏆\n{versusColorNames[highestScoreIdx]} IS THE FIRST TO 15 PTS!", 3.5f));
             StartCoroutine(MatchEndReturnDelayRoutine(7f));
         }
         else
         {
             currentRound++;
-            if (currentRound <= totalVersusRounds) StartCoroutine(RoundTransitionDelayRoutine(5f));
+            if (currentRound <= totalVersusRounds)
+            {
+                // Normal transition/tie progression -> DO NOT STOP AUDIO, let it keep playing
+                StartCoroutine(RoundTransitionDelayRoutine(5f));
+            }
             else
             {
+                // Total rounds completed, final match conclusion -> STOP AUDIO
+                if (globalAudioSource != null) globalAudioSource.Stop();
+
                 StartCoroutine(DelayedBannerOverride($"🏆 MATCH OVER 🏆\n{versusColorNames[highestScoreIdx]} HIGHEST FINAL SCORE WIN!", 3.5f));
                 StartCoroutine(MatchEndReturnDelayRoutine(7f));
             }
@@ -600,8 +617,6 @@ public class SumoGameManager : MonoBehaviour
 
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(isGamePaused);
 
-        // --- FIXED LINE ---
-        // If game is paused, gameplay state is false. If game is running (not paused), gameplay state is true.
         if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(!isGamePaused);
 
         Time.timeScale = isGamePaused ? 0f : 1f;
@@ -612,6 +627,9 @@ public class SumoGameManager : MonoBehaviour
         isGamePaused = false;
         isRoundActive = false;
         Time.timeScale = 1f;
+
+        // ONLY stop the audio when explicitly exiting to the main game mode select menu screen
+        if (globalAudioSource != null) globalAudioSource.Stop();
 
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
         if (modeSelectPanel != null) modeSelectPanel.SetActive(true);
@@ -673,7 +691,6 @@ public class SumoGameManager : MonoBehaviour
                 roundWinnerAnnounceText.gameObject.SetActive(false);
                 if (timerText != null) timerText.gameObject.SetActive(true);
 
-                // --- LIVE RUNNING GAMEPLAY: Enable Pause Button ---
                 if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(true);
 
                 for (int i = 0; i < spawnedControlUIs.Length; i++)
@@ -687,7 +704,6 @@ public class SumoGameManager : MonoBehaviour
                 roundWinnerAnnounceText.text = displayMessage;
                 if (timerText != null) timerText.gameObject.SetActive(false);
 
-                // --- IN MENUS / ANNOUNCEMENT INTERMISSIONS: Disable Pause Button ---
                 if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
 
                 for (int i = 0; i < spawnedControlUIs.Length; i++)
@@ -741,16 +757,16 @@ public class SumoGameManager : MonoBehaviour
     {
         StopAllCoroutines();
 
-        // 1. Clear characters and instantiated inputs from the previous loop iteration
+        // Manual restart -> cut audio completely so it can cleanly spin up fresh in StartNewRound()
+        if (globalAudioSource != null) globalAudioSource.Stop();
+
         ClearMatchData();
 
-        // 2. Wipe active player round scoreboard values back to zero
         for (int i = 0; i < playerScores.Length; i++)
         {
             playerScores[i] = 0;
         }
 
-        // 3. Clear banner announcements and show the timer layer
         if (roundWinnerAnnounceText != null)
         {
             roundWinnerAnnounceText.text = "";
@@ -758,10 +774,8 @@ public class SumoGameManager : MonoBehaviour
         }
         if (timerText != null) timerText.gameObject.SetActive(true);
 
-        // 4. Force state tracking flags back into operational status
         isMatchOngoing = true;
 
-        // 5. Notify the Pause Button that gameplay is actively running so it stays visible
         if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(true);
 
         StartNewRound();
