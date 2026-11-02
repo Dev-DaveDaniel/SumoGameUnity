@@ -95,6 +95,9 @@ public class SumoGameManager : MonoBehaviour
 
     private void Start()
     {
+        // Sound is disabled for the whole game
+        AudioListener.volume = 0f;
+
         // Start exclusively on the Game Title Screen
         ShowOnlyThisPanel(titleScreenPanel);
 
@@ -215,7 +218,7 @@ public class SumoGameManager : MonoBehaviour
         if (globalAudioSource != null) globalAudioSource.Stop();
 
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
-        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(true);
+        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
 
         // Return back to your main Title Screen completely
         ShowOnlyThisPanel(titleScreenPanel);
@@ -282,6 +285,7 @@ public class SumoGameManager : MonoBehaviour
 
         Time.timeScale = 1f;
         isRoundActive = true;
+        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(true);
 
         yield return new WaitForSeconds(1.0f);
         DisplayRoundEndNotification("");
@@ -308,7 +312,7 @@ public class SumoGameManager : MonoBehaviour
             Vector2 spawnPosition = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
 
             GameObject newPlayer = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
-            newPlayer.name = $"Wrestler_{i + 1}";
+            newPlayer.name = "Sumo Main";
             activeWrestlersInRound.Add(newPlayer);
 
             TopDownMovement movement = newPlayer.GetComponent<TopDownMovement>();
@@ -452,6 +456,7 @@ public class SumoGameManager : MonoBehaviour
         {
             isRoundActive = false;
             FreezeAllMovement();
+            if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
 
             string visualAnnouncementText = "";
 
@@ -480,12 +485,14 @@ public class SumoGameManager : MonoBehaviour
 
         if (teamAScore >= teamRoundsToWin)
         {
+            if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
             if (globalAudioSource != null) globalAudioSource.Stop();
             StartCoroutine(DelayedBannerOverride("🏆 MATCH OVER 🏆\nRED TEAM HAS WON THE MATCH!", 3.5f));
             StartCoroutine(MatchEndReturnDelayRoutine(7f));
         }
         else if (teamBScore >= teamRoundsToWin)
         {
+            if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
             if (globalAudioSource != null) globalAudioSource.Stop();
             StartCoroutine(DelayedBannerOverride("🏆 MATCH OVER 🏆\nBLUE TEAM HAS WON THE MATCH!", 3.5f));
             StartCoroutine(MatchEndReturnDelayRoutine(7f));
@@ -503,6 +510,7 @@ public class SumoGameManager : MonoBehaviour
         {
             isRoundActive = false;
             FreezeAllMovement();
+            if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
             int winnerIdx = (victimPlayerIndex == suddenDeathPlayerA) ? suddenDeathPlayerB : suddenDeathPlayerA;
             playerScores[winnerIdx] += 5;
 
@@ -528,6 +536,7 @@ public class SumoGameManager : MonoBehaviour
         {
             isRoundActive = false;
             FreezeAllMovement();
+            if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
 
             GameObject survivorObj = activeWrestlersInRound[0];
             int survivorIdx = survivorObj.GetComponent<TopDownMovement>().playerIndex;
@@ -542,6 +551,7 @@ public class SumoGameManager : MonoBehaviour
         {
             isRoundActive = false;
             FreezeAllMovement();
+            if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
 
             GameObject lastFell = eliminatedThisRound[eliminatedThisRound.Count - 1];
             GameObject secondLastFell = eliminatedThisRound[eliminatedThisRound.Count - 2];
@@ -571,6 +581,7 @@ public class SumoGameManager : MonoBehaviour
 
         isRoundActive = false;
         FreezeAllMovement();
+        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
         HandleRingDrop();
 
         for (int i = 0; i < activePlayerCount; i++)
@@ -612,6 +623,7 @@ public class SumoGameManager : MonoBehaviour
 
         if (matchWon)
         {
+            if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
             if (globalAudioSource != null) globalAudioSource.Stop();
             StartCoroutine(DelayedBannerOverride($"🏆 MATCH OVER 🏆\n{versusColorNames[highestScoreIdx]} IS THE FIRST TO 15 PTS!", 3.5f));
             StartCoroutine(MatchEndReturnDelayRoutine(7f));
@@ -622,6 +634,7 @@ public class SumoGameManager : MonoBehaviour
             if (currentRound <= totalVersusRounds) StartCoroutine(RoundTransitionDelayRoutine(5f));
             else
             {
+                if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
                 if (globalAudioSource != null) globalAudioSource.Stop();
                 StartCoroutine(DelayedBannerOverride($"🏆 MATCH OVER 🏆\n{versusColorNames[highestScoreIdx]} HIGHEST FINAL SCORE WIN!", 3.5f));
                 StartCoroutine(MatchEndReturnDelayRoutine(7f));
@@ -737,6 +750,7 @@ public class SumoGameManager : MonoBehaviour
 
         currentTimer = roundDurationSeconds;
         isRoundActive = true;
+        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(true);
     }
 
     private IEnumerator DelayedBannerOverride(string text, float delay)
@@ -766,6 +780,7 @@ public class SumoGameManager : MonoBehaviour
 
     public void RestartCurrentMatchSetup()
     {
+        isGamePaused = false;
         StopAllCoroutines();
         if (globalAudioSource != null) globalAudioSource.Stop();
         ClearMatchData();

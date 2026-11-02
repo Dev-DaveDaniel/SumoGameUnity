@@ -135,7 +135,7 @@ GameObject:
   - component: {fileID: 2379313931205516925}
   - component: {fileID: 4173017688939700229}
   m_Layer: 3
-  m_Name: PlayerPrefab
+  m_Name: Sumo Main
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -300,7 +300,7 @@ GameObject:
   - component: {fileID: 2927774652070771345}
   - component: {fileID: 1879035343409496756}
   m_Layer: 3
-  m_Name: Player 1 Body
+  m_Name: Sumo Main Body
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
