@@ -1,155 +1,91 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class PauseManager : MonoBehaviour
 {
-    [Header("UI Sub-Elements")]
-    [Tooltip("The panel containing the Play, Restart, and Exit buttons.")]
     [SerializeField] private GameObject pauseMenuPanel;
-
-    [Header("Dependencies")]
-    [Tooltip("Reference to your SumoGameManager to access active game setups.")]
     [SerializeField] private SumoGameManager gameManager;
 
-    private Button selfButtonComponent;
-    private Image selfImageComponent;
-
-    private bool isPaused = false;
-    private bool isMatchActive = false; // Tracks if gameplay is actively running
+    private Button selfButton;
+    private Image selfImage;
+    private bool isPaused, isMatchActive;
 
     private void Awake()
     {
-        selfButtonComponent = GetComponent<Button>();
-        selfImageComponent = GetComponent<Image>();
+        selfButton = GetComponent<Button>();
+        selfImage = GetComponent<Image>();
     }
 
     private void Start()
     {
-        if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
-
-        // Starts hidden because the player is in the selection menus on launch
-        SetPauseButtonGameplayState(false);
+        SetMenu(false);
+        SetPauseButtonGameplayState(false); // hidden while in selection menus
     }
 
-    /// <summary>
-    /// Handles hiding/showing the pause button safely during announcements, mode selection, or player setups.
-    /// </summary>
     public void SetPauseButtonGameplayState(bool activeAndPlaying)
     {
         isMatchActive = activeAndPlaying;
-
-        // Only show visually if the match is active AND we are not currently paused
-        if (isMatchActive && !isPaused)
-        {
-            SetSelfButtonVisibility(true);
-        }
-        else
-        {
-            SetSelfButtonVisibility(false);
-        }
+        SetSelfButtonVisibility(isMatchActive && !isPaused);
     }
 
     public void PauseGame()
     {
         if (!isMatchActive) return;
-
         isPaused = true;
         Time.timeScale = 0f;
-
         SetSelfButtonVisibility(false);
-        if (pauseMenuPanel != null) pauseMenuPanel.SetActive(true);
-
+        SetMenu(true);
         TogglePlayerControls(false);
-
-        // --- FORCE GAME MANAGER INTO PAUSE COMPLIANCE ---
-        if (gameManager != null)
-        {
-            // Force the manager's status flag to reflect the actual state
-            gameManager.CancelInvoke(); // Clear any hanging invokes
-
-            // Direct assignment to fix the manager side if accessible,
-            // or ensure it matches the layout panel states
-        }
+        if (gameManager != null) gameManager.CancelInvoke();
     }
 
     public void ResumeGame()
     {
         isPaused = false;
         Time.timeScale = 1f;
-
-        if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
-
-        if (isMatchActive)
-        {
-            SetSelfButtonVisibility(true);
-        }
-
+        SetMenu(false);
+        if (isMatchActive) SetSelfButtonVisibility(true);
         TogglePlayerControls(true);
-
-        // --- FIX: FORCE THE SUMO MANAGER UNPAUSE LAYERS ---
-        if (gameManager != null)
-        {
-            // This forces SumoGameManager to recalculate and clear its frozen update state safely
-            gameManager.TogglePauseGameSystem();
-        }
+        if (gameManager != null) gameManager.TogglePauseGameSystem(); // clears manager's frozen update state
     }
 
-    /// <summary>
-    /// RESTART FIX: Calls a custom match reset inside SumoGameManager 
-    /// instead of wiping out the chosen variables via scene reloading.
-    /// </summary>
+    // Resets via the manager so chosen mode/player count survive (no scene reload).
     public void RestartMatch()
     {
-        Time.timeScale = 1f;
-        isPaused = false;
-
-        if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
-
-        if (gameManager != null)
-        {
-            gameManager.RestartCurrentMatchSetup();
-        }
-        else
-        {
-            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
-        }
+        Unpause();
+        if (gameManager != null) gameManager.RestartCurrentMatchSetup();
+        else ReloadScene();
     }
 
-    /// <summary>
-    /// EXIT TO MAIN MENU: Clears active match systems and loads the selection screen.
-    /// </summary>
     public void ExitToGameModePanel()
+    {
+        Unpause();
+        SetPauseButtonGameplayState(false);
+        if (gameManager != null) gameManager.ReturnToHomeScreenHub();
+        else ReloadScene();
+    }
+
+    private void Unpause()
     {
         Time.timeScale = 1f;
         isPaused = false;
-
-        if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
-        SetPauseButtonGameplayState(false);
-
-        if (gameManager != null)
-        {
-            gameManager.ReturnToHomeScreenHub();
-        }
-        else
-        {
-            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
-        }
+        SetMenu(false);
     }
+
+    private void SetMenu(bool on) { if (pauseMenuPanel != null) pauseMenuPanel.SetActive(on); }
+
+    private static void ReloadScene() => SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
 
     private void SetSelfButtonVisibility(bool visible)
     {
-        if (selfButtonComponent != null) selfButtonComponent.enabled = visible;
-        if (selfImageComponent != null) selfImageComponent.enabled = visible;
+        if (selfButton != null) selfButton.enabled = visible;
+        if (selfImage != null) selfImage.enabled = visible;
     }
 
     private void TogglePlayerControls(bool state)
     {
-        if (gameManager != null && gameManager.spawnedControlUIs != null)
-        {
-            foreach (var ui in gameManager.spawnedControlUIs)
-            {
-                if (ui != null) ui.SetActive(state);
-            }
-        }
+        if (gameManager == null || gameManager.spawnedControlUIs == null) return;
+        foreach (var ui in gameManager.spawnedControlUIs) if (ui != null) ui.SetActive(state);
     }
 }

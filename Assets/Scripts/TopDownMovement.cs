@@ -4,134 +4,85 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class TopDownMovement : MonoBehaviour
 {
-    [Header("Movement Settings")]
+    [Header("Movement")]
     public float moveSpeed = 5f;
     public float rotationSpeed = 250f;
 
-    [Header("Dodge Settings")]
+    [Header("Dodge")]
     public float dodgeDistance = 3f;
     public float dodgeSpeed = 15f;
     public float dodgeCooldown = 0.3f;
-    private bool dodgeLeftNext = false;
 
-    [Header("Push / Shove Settings")]
+    [Header("Push / Shove")]
     public float pushForce = 25f;
     public float pushCooldown = 0.3f;
     [SerializeField] private float shoveRadius = 0.8f;
     [SerializeField] private float shoveOffsetDistance = 0.9f;
-
-    [Header("Whiff & Lunge Penalty Engine")]
-    [Tooltip("How much forward force is applied to lunge the player during a shove execution.")]
     public float shoveLungeForce = 12f;
-    [Tooltip("Duration of the forward attack lunging dash movement.")]
     public float lungeDuration = 0.15f;
-    [Tooltip("Total recovery penalty duration if the shove misses entirely (locks movement/dodge).")]
-    public float whiffCooldownPenalty = 0.8f;
+    public float whiffCooldownPenalty = 0.8f; // movement/dodge lock when shove misses
 
-    private bool isWhiffRecovering = false;
-    private bool isLungingForward = false;
-
-    [Header("Physics Interaction System")]
-    [Tooltip("Minimum collision speed required to register an interaction.")]
+    [Header("Interaction Tracking")]
     [SerializeField] private float minimumVelocityThreshold = 1.5f;
-    [Tooltip("0 = side swipe/any hit, 0.5 = intentional forward pushing angle, 0.8 = strict direct hit.")]
-    [SerializeField] private float intentionalDirectionThreshold = 0.25f;
-    [Tooltip("How many seconds an interaction remains valid for kill credit.")]
-    public float trackingWindowDuration = 2.0f;
+    [SerializeField] private float intentionalDirectionThreshold = 0.25f; // dot(facing, toEnemy) needed to count as a push
+    public float trackingWindowDuration = 2.0f; // seconds a hit stays valid for kill credit
 
-    [Header("Juice & Knockback Physics Curves")]
-    [SerializeField] private AnimationCurve knockbackCurve = AnimationCurve.Linear(0, 1, 1, 0);
+    [Header("Knockback")]
     [SerializeField] private float knockbackDuration = 0.45f;
 
-    [Header("Shove Audio Juice Engine")]
-    [Tooltip("The local AudioSource component attached to this player prefab.")]
+    [Header("Audio")]
     [SerializeField] private AudioSource playerAudioSource;
-    [Tooltip("Add multiple unique grunt/swoosh variations here to cycle through when shoving.")]
     [SerializeField] private AudioClip[] shoveAudioClips;
-    private int currentShoveAudioIndex = 0;
 
-    [Header("Debug & Safety Configuration")]
+    [Header("Debug")]
     [SerializeField] private bool hitAnythingWithRigidbody = true;
     [SerializeField] private LayerMask playerLayer;
     [SerializeField] private bool showDebugTraces = true;
 
-    [Header("Control Script Reference")]
     public MobileControls controls;
 
-    private Rigidbody2D rb;
-    [HideInInspector] public bool isDodging = false;
-    private float lastDodgeTime = -999f;
-    private float lastPushTime = -999f;
-
-    // --- TRACKING PARAMETERS ---
-    [HideInInspector] public int playerIndex = 0;
+    [HideInInspector] public bool isDodging;
+    [HideInInspector] public int playerIndex;
     [HideInInspector] public int lastAttackerIndex = -1;
     [HideInInspector] public float lastInteractionTimestamp = -999f;
-    [HideInInspector] public int consecutiveHitCount = 0;
-
-    [HideInInspector] public bool hasDealtDamageThisRound = false;
+    [HideInInspector] public int consecutiveHitCount;
+    [HideInInspector] public bool hasDealtDamageThisRound;
     [HideInInspector] public float currentKnockbackReceivedMultiplier = 1.0f;
 
-    private bool isBeingKnockedBack = false;
+    private readonly AnimationCurve knockbackCurve = new AnimationCurve(
+        new Keyframe(0f, 1f, 0f, -2.5f),
+        new Keyframe(0.25f, 0.15f, -0.6f, -0.6f),
+        new Keyframe(1f, 0f, 0f, 0f));
+
+    private Rigidbody2D rb;
+    private bool dodgeLeftNext, isWhiffRecovering, isLungingForward, isBeingKnockedBack;
+    private float lastDodgeTime = -999f, lastPushTime = -999f;
+    private int currentShoveAudioIndex;
     private Vector2 knockbackDirection;
-    private float knockbackMaxForce;
-    private float knockbackTimer;
+    private float knockbackMaxForce, knockbackTimer;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-
-        // Auto-assign AudioSource if left blank in the Inspector layout
-        if (playerAudioSource == null)
-        {
-            playerAudioSource = GetComponent<AudioSource>();
-        }
-
-        if (rb != null)
-        {
-            rb.bodyType = RigidbodyType2D.Dynamic;
-            rb.gravityScale = 0f;
-            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-        }
-
-        knockbackCurve = new AnimationCurve(
-            new Keyframe(0f, 1f, 0f, -2.5f),
-            new Keyframe(0.25f, 0.15f, -0.6f, -0.6f),
-            new Keyframe(1f, 0f, 0f, 0f)
-        );
+        if (playerAudioSource == null) playerAudioSource = GetComponent<AudioSource>();
+        rb.bodyType = RigidbodyType2D.Dynamic;
+        rb.gravityScale = 0f;
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
     }
 
     private void Update()
     {
         if (controls == null) return;
 
-        // BLOCK: Cannot dodge or push if currently locked in a whiff recovery or actively lunging
-        if (isWhiffRecovering || isLungingForward || isBeingKnockedBack)
-        {
-            controls.ResetDodge();
-            controls.ResetPush();
-            return;
-        }
+        bool locked = isWhiffRecovering || isLungingForward || isBeingKnockedBack;
+        bool dodge = controls.dodgePressed, push = controls.pushPressed;
+        // Consume presses every frame so they don't buffer through locks or cooldowns.
+        if (dodge || locked) controls.ResetDodge();
+        if (push || locked) controls.ResetPush();
+        if (locked) return;
 
-        if (controls.dodgePressed)
-        {
-            if (Time.time - lastDodgeTime >= dodgeCooldown)
-            {
-                controls.ResetDodge();
-                PerformDodge();
-            }
-            else controls.ResetDodge();
-        }
-
-        if (controls.pushPressed)
-        {
-            if (Time.time - lastPushTime >= pushCooldown)
-            {
-                controls.ResetPush();
-                ExecuteInstantShove();
-            }
-            else controls.ResetPush();
-        }
+        if (dodge && Time.time - lastDodgeTime >= dodgeCooldown) PerformDodge();
+        if (push && Time.time - lastPushTime >= pushCooldown) ExecuteInstantShove();
     }
 
     private void FixedUpdate()
@@ -140,94 +91,51 @@ public class TopDownMovement : MonoBehaviour
         {
             knockbackTimer += Time.fixedDeltaTime;
             float progress = knockbackTimer / knockbackDuration;
-
             if (progress >= 1f)
             {
                 isBeingKnockedBack = false;
                 rb.linearVelocity = Vector2.zero;
             }
-            else
-            {
-                float currentForceMultiplier = knockbackCurve.Evaluate(progress);
-                rb.linearVelocity = knockbackDirection * (knockbackMaxForce * currentForceMultiplier * currentKnockbackReceivedMultiplier);
-            }
+            else rb.linearVelocity = knockbackDirection * (knockbackMaxForce * knockbackCurve.Evaluate(progress) * currentKnockbackReceivedMultiplier);
             return;
         }
 
-        // BLOCK: Physics movement completely cut if recovering from a whiff or lunging
-        if (isWhiffRecovering || isLungingForward || isDodging) return;
+        if (isWhiffRecovering || isLungingForward || isDodging || controls == null) return;
 
-        HandleMovementAndRotation();
-    }
+        if (controls.rotateRightHeld) rb.MoveRotation(rb.rotation - rotationSpeed * Time.fixedDeltaTime);
 
-    private void HandleMovementAndRotation()
-    {
-        if (controls == null) return;
-
-        if (controls.rotateRightHeld)
-        {
-            float rotAmount = -1f * rotationSpeed * Time.fixedDeltaTime;
-            rb.MoveRotation(rb.rotation + rotAmount);
-        }
-
-        if (controls.moveForwardHeld)
-        {
-            rb.linearVelocity = (Vector2)transform.up * moveSpeed;
-        }
-        else
-        {
-            if (rb.linearVelocity.magnitude <= moveSpeed + 0.1f)
-            {
-                rb.linearVelocity = Vector2.zero;
-            }
-        }
+        if (controls.moveForwardHeld) rb.linearVelocity = (Vector2)transform.up * moveSpeed;
+        else if (rb.linearVelocity.magnitude <= moveSpeed + 0.1f) rb.linearVelocity = Vector2.zero;
     }
 
     public void ApplyExplosiveKnockback(Vector2 direction, float force, int attackerID)
     {
-        // Interrupt attacks if hit mid-lunge or mid-whiff
-        isLungingForward = false;
+        isLungingForward = false; // getting hit interrupts lunge/whiff
         isWhiffRecovering = false;
-
         isBeingKnockedBack = true;
         knockbackDirection = direction.normalized;
         knockbackMaxForce = force;
         knockbackTimer = 0f;
 
-        if (lastAttackerIndex == attackerID)
-        {
-            consecutiveHitCount++;
-        }
-        else
-        {
-            lastAttackerIndex = attackerID;
-            consecutiveHitCount = 1;
-        }
-
+        consecutiveHitCount = lastAttackerIndex == attackerID ? consecutiveHitCount + 1 : 1;
         RegisterInteractionData(attackerID);
     }
 
-    private void OnCollisionEnter2D(Collision2D collision) => HandleDynamicPhysicsPushTracking(collision);
-    private void OnCollisionStay2D(Collision2D collision) => HandleDynamicPhysicsPushTracking(collision);
+    private void OnCollisionEnter2D(Collision2D collision) => TrackPhysicsPush(collision);
+    private void OnCollisionStay2D(Collision2D collision) => TrackPhysicsPush(collision);
 
-    private void HandleDynamicPhysicsPushTracking(Collision2D collision)
+    private void TrackPhysicsPush(Collision2D collision)
     {
-        if (collision.gameObject.TryGetComponent<TopDownMovement>(out var enemyMovement))
+        if (!collision.gameObject.TryGetComponent<TopDownMovement>(out var enemy)) return;
+
+        bool pressing = controls != null && controls.moveForwardHeld;
+        if (collision.relativeVelocity.magnitude < minimumVelocityThreshold && !pressing) return;
+
+        Vector2 toEnemy = (enemy.transform.position - transform.position).normalized;
+        if (Vector2.Dot(transform.up, toEnemy) >= intentionalDirectionThreshold)
         {
-            float relativeVelocity = collision.relativeVelocity.magnitude;
-            bool isPressingButtons = controls != null && (controls.moveForwardHeld);
-
-            if (relativeVelocity >= minimumVelocityThreshold || isPressingButtons)
-            {
-                Vector2 vectorToEnemy = (enemyMovement.transform.position - transform.position).normalized;
-                float forwardIntentionalityDot = Vector2.Dot(transform.up, vectorToEnemy);
-
-                if (forwardIntentionalityDot >= intentionalDirectionThreshold)
-                {
-                    enemyMovement.RegisterInteractionData(this.playerIndex);
-                    this.hasDealtDamageThisRound = true;
-                }
-            }
+            enemy.RegisterInteractionData(playerIndex);
+            hasDealtDamageThisRound = true;
         }
     }
 
@@ -240,26 +148,22 @@ public class TopDownMovement : MonoBehaviour
     private void PerformDodge()
     {
         lastDodgeTime = Time.time;
-        Vector2 dodgeDir = dodgeLeftNext ? -transform.right : transform.right;
+        Vector2 dir = dodgeLeftNext ? -transform.right : transform.right;
         dodgeLeftNext = !dodgeLeftNext;
-        StartCoroutine(DodgeRoutine(dodgeDir));
+        StartCoroutine(DodgeRoutine(dir));
     }
 
     private IEnumerator DodgeRoutine(Vector2 dir)
     {
         isDodging = true;
-        Vector2 start = rb.position;
-        Vector2 end = start + dir.normalized * dodgeDistance;
+        Vector2 start = rb.position, end = start + dir.normalized * dodgeDistance;
         float duration = dodgeDistance / dodgeSpeed;
-
-        float t = 0f;
-        while (t < duration)
+        for (float t = 0f; t < duration; )
         {
             t += Time.deltaTime;
             rb.position = Vector2.Lerp(start, end, t / duration);
             yield return null;
         }
-
         rb.position = end;
         isDodging = false;
     }
@@ -267,100 +171,55 @@ public class TopDownMovement : MonoBehaviour
     private void ExecuteInstantShove()
     {
         lastPushTime = Time.time;
-
-        // --- AUDIO CYCLING INSTIGATION POOL ---
         PlaySequentialShoveAudio();
-
         StartCoroutine(ShoveAttackRoutine());
     }
 
     private void PlaySequentialShoveAudio()
     {
         if (playerAudioSource == null || shoveAudioClips == null || shoveAudioClips.Length == 0) return;
-
-        // Extract clip variant located at pointer
-        AudioClip clipToPlay = shoveAudioClips[currentShoveAudioIndex];
-
-        if (clipToPlay != null)
-        {
-            // PlayOneShot prevents cutting off audio elements mid-clip if mashed quickly
-            playerAudioSource.PlayOneShot(clipToPlay);
-        }
-
-        // Advance to next index; loop back cleanly using the remainder operator
+        var clip = shoveAudioClips[currentShoveAudioIndex];
+        if (clip != null) playerAudioSource.PlayOneShot(clip); // PlayOneShot doesn't cut off when mashed
         currentShoveAudioIndex = (currentShoveAudioIndex + 1) % shoveAudioClips.Length;
     }
 
     private IEnumerator ShoveAttackRoutine()
     {
         isLungingForward = true;
-        Vector2 lungeDirection = transform.up;
-
-        // Apply the mechanical physical lunge forward force
-        rb.linearVelocity = lungeDirection * shoveLungeForce;
-
+        Vector2 dir = transform.up;
+        rb.linearVelocity = dir * shoveLungeForce;
         yield return new WaitForSeconds(lungeDuration);
-
         rb.linearVelocity = Vector2.zero;
         isLungingForward = false;
 
-        // Sweep for enemies at the apex/finish of our lunge window
-        Vector2 strikeOrigin = (Vector2)transform.position + (lungeDirection * shoveOffsetDistance);
-        LayerMask targetMask = hitAnythingWithRigidbody ? ~0 : playerLayer;
-        Collider2D[] hitColliders = Physics2D.OverlapCircleAll(strikeOrigin, shoveRadius, targetMask);
+        Vector2 origin = (Vector2)transform.position + dir * shoveOffsetDistance;
+        LayerMask mask = hitAnythingWithRigidbody ? ~0 : playerLayer;
 
-        bool hitRegistered = false;
-
-        foreach (var col in hitColliders)
+        foreach (var col in Physics2D.OverlapCircleAll(origin, shoveRadius, mask))
         {
-            if (col.gameObject == gameObject || col.transform.IsChildOf(transform) || col.isTrigger)
-                continue;
+            if (col.isTrigger || col.transform.IsChildOf(transform)) continue;
 
             Rigidbody2D enemyRb = col.attachedRigidbody != null ? col.attachedRigidbody : col.GetComponentInParent<Rigidbody2D>();
+            if (enemyRb == null || enemyRb.gameObject == gameObject) continue;
+            if (!enemyRb.TryGetComponent<TopDownMovement>(out var enemy) || enemy.isDodging) continue;
 
-            if (enemyRb != null && enemyRb.gameObject != gameObject)
-            {
-                if (enemyRb.TryGetComponent<TopDownMovement>(out var enemyMovement))
-                {
-                    if (enemyMovement.isDodging) continue;
-
-                    this.hasDealtDamageThisRound = true;
-                    enemyMovement.ApplyExplosiveKnockback(lungeDirection, pushForce, this.playerIndex);
-                    hitRegistered = true;
-
-                    if (JuiceManager.Instance != null)
-                    {
-                        JuiceManager.Instance.TriggerImpactJuice(0.06f, 0.15f, 0.12f, 0.15f);
-                    }
-                    break;
-                }
-            }
+            hasDealtDamageThisRound = true;
+            enemy.ApplyExplosiveKnockback(dir, pushForce, playerIndex);
+            if (JuiceManager.Instance != null) JuiceManager.Instance.TriggerImpactJuice(0.06f, 0.15f, 0.12f, 0.15f);
+            yield break;
         }
 
-        // If the lunge complete and nobody was found, lock down everything into a whiff state
-        if (!hitRegistered)
-        {
-            yield return StartCoroutine(WhiffRecoveryPenaltyRoutine());
-        }
-    }
-
-    private IEnumerator WhiffRecoveryPenaltyRoutine()
-    {
+        // Missed: lock movement and actions as a whiff penalty.
         isWhiffRecovering = true;
-        rb.linearVelocity = Vector2.zero; // Stops all slide drift completely during punishment
-
-        // Locks the player completely for the duration defined by whiffCooldownPenalty
+        rb.linearVelocity = Vector2.zero;
         yield return new WaitForSeconds(whiffCooldownPenalty);
-
         isWhiffRecovering = false;
     }
 
     private void OnDrawGizmos()
     {
         if (!showDebugTraces) return;
-        Vector2 dir = transform.up;
-        Vector3 strikeOrigin = transform.position + (Vector3)(dir * shoveOffsetDistance);
         Gizmos.color = Color.cyan;
-        Gizmos.DrawWireSphere(strikeOrigin, shoveRadius);
+        Gizmos.DrawWireSphere(transform.position + transform.up * shoveOffsetDistance, shoveRadius);
     }
 }
