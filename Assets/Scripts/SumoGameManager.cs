@@ -1,5 +1,6 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
@@ -11,10 +12,10 @@ public class SumoGameManager : MonoBehaviour
     public static SumoGameManager Instance { get; private set; }
 
     [Header("UI Menus & Main Panels")]
-    [SerializeField] private GameObject titleScreenPanel;       // NEW
-    [SerializeField] private GameObject howToPlayPanel;         // NEW
-    [SerializeField] private GameObject controlsImagePanel;     // NEW
-    [SerializeField] private GameObject rulesTextPanel;         // NEW
+    [SerializeField] private GameObject titleScreenPanel;
+    [SerializeField] private GameObject howToPlayPanel;
+    [SerializeField] private GameObject controlsImagePanel;
+    [SerializeField] private GameObject rulesTextPanel;
     [SerializeField] private GameObject modeSelectPanel;
     [SerializeField] private GameObject characterSelectPanel;
     [SerializeField] private GameObject gameplayUIPanel;
@@ -52,7 +53,6 @@ public class SumoGameManager : MonoBehaviour
     private float currentTimer;
     private bool isRoundActive = false;
     private bool isGamePaused = false;
-    private bool isMatchOngoing = false;
 
     private int[] playerScores = new int[4];
     private int teamAScore = 0;
@@ -60,7 +60,7 @@ public class SumoGameManager : MonoBehaviour
     private const int VERSUS_WINNING_SCORE = 15;
 
     private int[] playerTeamAssignments = new int[4];
-    private bool[] playerPassedEngagementCheck = new bool[] { true, true, true, true };
+    private bool[] playerPassedEngagementCheck = { true, true, true, true };
 
     private List<GameObject> activeWrestlersInRound = new List<GameObject>();
     private List<GameObject> eliminatedThisRound = new List<GameObject>();
@@ -73,19 +73,14 @@ public class SumoGameManager : MonoBehaviour
     private Color teamARed = new Color(1f, 0.15f, 0.2f, 1f);
     private Color teamBBlue = new Color(0f, 0.5f, 1f, 1f);
 
-    private Color[] versusPlayerColors = new Color[] {
+    private Color[] versusPlayerColors = {
         new Color(1f, 0.15f, 0.35f, 1f),
         new Color(1f, 0.84f, 0f, 1f),
         new Color(0.2f, 1f, 0.2f, 1f),
         new Color(0f, 0.65f, 1f, 1f)
     };
 
-    private string[] versusColorNames = new string[] {
-        "RED",
-        "GOLD",
-        "GREEN",
-        "BLUE"
-    };
+    private string[] versusColorNames = { "RED", "GOLD", "GREEN", "BLUE" };
 
     private void Awake()
     {
@@ -95,116 +90,60 @@ public class SumoGameManager : MonoBehaviour
 
     private void Start()
     {
-        // Sound is disabled for the whole game
-        AudioListener.volume = 0f;
-
-        // Start exclusively on the Game Title Screen
+        AudioListener.volume = 0f; // sound is disabled for the whole game
         ShowOnlyThisPanel(titleScreenPanel);
-
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
         if (roundWinnerAnnounceText != null) roundWinnerAnnounceText.gameObject.SetActive(false);
     }
 
-    /// <summary>
-    /// Helper method to cleanly close everything and show only one menu panel at a time
-    /// </summary>
     private void ShowOnlyThisPanel(GameObject targetPanel)
     {
-        if (titleScreenPanel != null) titleScreenPanel.SetActive(titleScreenPanel == targetPanel);
-        if (howToPlayPanel != null) howToPlayPanel.SetActive(howToPlayPanel == targetPanel);
-        if (controlsImagePanel != null) controlsImagePanel.SetActive(controlsImagePanel == targetPanel);
-        if (rulesTextPanel != null) rulesTextPanel.SetActive(rulesTextPanel == targetPanel);
-        if (modeSelectPanel != null) modeSelectPanel.SetActive(modeSelectPanel == targetPanel);
-        if (characterSelectPanel != null) characterSelectPanel.SetActive(characterSelectPanel == targetPanel);
-        if (gameplayUIPanel != null) gameplayUIPanel.SetActive(gameplayUIPanel == targetPanel);
+        foreach (var p in new[] { titleScreenPanel, howToPlayPanel, controlsImagePanel, rulesTextPanel, modeSelectPanel, characterSelectPanel, gameplayUIPanel })
+            if (p != null) p.SetActive(p == targetPanel);
     }
 
-    // ==========================================
-    //          NEW HOME SCREEN NAVIGATION
-    // ==========================================
-
-    // Button 1: Pressed Play on Title Screen
-    public void OnClickPlayButton()
+    private void SetPauseButton(bool state)
     {
-        ShowOnlyThisPanel(modeSelectPanel);
+        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(state);
     }
 
-    // Button 2: Pressed How To Play on Title Screen
-    public void OnClickHowToPlayMenuButton()
-    {
-        ShowOnlyThisPanel(howToPlayPanel);
-    }
+    private int IndexOf(GameObject player) => player.GetComponent<TopDownMovement>().playerIndex;
 
-    // Inside How To Play: Pressed Control Scheme
-    public void OnClickControlSchemeSubButton()
-    {
-        ShowOnlyThisPanel(controlsImagePanel);
-    }
-
-    // Inside How To Play: Pressed Game Rules
-    public void OnClickRulesSubButton()
-    {
-        ShowOnlyThisPanel(rulesTextPanel);
-    }
-
-    // Back Button from Control Scheme OR Rules Panel -> returns to How To Play Panel
-    public void OnClickBackToHowToPlayPanel()
-    {
-        ShowOnlyThisPanel(howToPlayPanel);
-    }
-
-    // Exit Button from How to Play Panel -> returns to Title Screen Panel
-    public void OnClickExitToTitleScreen()
-    {
-        ShowOnlyThisPanel(titleScreenPanel);
-    }
-
-    // ==========================================
-    //          EXISTING LOGIC MODIFIED
-    // ==========================================
+    // Home screen navigation (wired to UI buttons)
+    public void OnClickPlayButton() => ShowOnlyThisPanel(modeSelectPanel);
+    public void OnClickHowToPlayMenuButton() => ShowOnlyThisPanel(howToPlayPanel);
+    public void OnClickControlSchemeSubButton() => ShowOnlyThisPanel(controlsImagePanel);
+    public void OnClickRulesSubButton() => ShowOnlyThisPanel(rulesTextPanel);
+    public void OnClickBackToHowToPlayPanel() => ShowOnlyThisPanel(howToPlayPanel);
+    public void OnClickExitToTitleScreen() => ShowOnlyThisPanel(titleScreenPanel);
 
     public void SelectVersusModeMenu()
     {
         activeGameMode = GameMode.Versus;
         ShowOnlyThisPanel(characterSelectPanel);
-        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
+        SetPauseButton(false);
     }
 
     public void SelectTeamModeGame()
     {
         activeGameMode = GameMode.Team;
-        activePlayerCount = 4;
-
-        ShowOnlyThisPanel(gameplayUIPanel);
-        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
-
-        ResetMatchDataFull();
-        isMatchOngoing = true;
-        StartNewRound();
+        BeginMatch(4, false);
     }
 
     public void SelectPlayerCount(int count)
     {
         activeGameMode = GameMode.Versus;
-        activePlayerCount = Mathf.Clamp(count, 2, 4);
-        ShowOnlyThisPanel(gameplayUIPanel);
-        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
-
-        ResetMatchDataFull();
-        isMatchOngoing = true;
-        StartNewRound();
+        BeginMatch(Mathf.Clamp(count, 2, 4), false);
     }
 
-    public void LaunchMatchLive(int totalPlayers, int[] cosmeticSkins)
+    public void LaunchMatchLive(int totalPlayers, int[] cosmeticSkins) => BeginMatch(totalPlayers, true);
+
+    private void BeginMatch(int players, bool pauseButtonState)
     {
-        activePlayerCount = totalPlayers;
+        activePlayerCount = players;
         ShowOnlyThisPanel(gameplayUIPanel);
-
+        SetPauseButton(pauseButtonState);
         ResetMatchDataFull();
-        isMatchOngoing = true;
-
-        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(true);
-
         StartNewRound();
     }
 
@@ -213,34 +152,25 @@ public class SumoGameManager : MonoBehaviour
         isGamePaused = false;
         isRoundActive = false;
         Time.timeScale = 1f;
-
-        // Stop music entirely
         if (globalAudioSource != null) globalAudioSource.Stop();
-
         if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
-        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
-
-        // Return back to your main Title Screen completely
+        SetPauseButton(false);
         ShowOnlyThisPanel(titleScreenPanel);
         ClearMatchData();
     }
 
-    // --- LEAVING REMAINDER OF MATCH CORE LOGIC UNCHANGED FOR STABILITY ---
     private void ResetMatchDataFull()
     {
         currentRound = 1;
         isSuddenDeathActive = false;
         isGamePaused = false;
-        teamAScore = 0;
-        teamBScore = 0;
+        teamAScore = teamBScore = 0;
         Time.timeScale = 1f;
-
         for (int i = 0; i < 4; i++)
         {
             playerScores[i] = 0;
             playerPassedEngagementCheck[i] = true;
         }
-
         ResetRingsToDefault();
     }
 
@@ -250,42 +180,33 @@ public class SumoGameManager : MonoBehaviour
         Time.timeScale = 1f;
         StopAllCoroutines();
         ClearMatchData();
-
-        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
+        SetPauseButton(false);
 
         isSuddenDeathActive = false;
         if (currentRound == 1) ResetRingsToDefault();
 
         SpawnPlayersAndUI(activePlayerCount, spawnRadiusFromCenter);
-
         currentTimer = roundDurationSeconds;
-
         StartCoroutine(IntroCountdownSequence());
     }
 
     private IEnumerator IntroCountdownSequence()
     {
-        string headerText = activeGameMode == GameMode.Versus ? $"ROUND {currentRound}" : $"TEAM BATTLE - ROUND {currentRound}";
-        DisplayRoundEndNotification(headerText);
+        DisplayRoundEndNotification(activeGameMode == GameMode.Versus ? $"ROUND {currentRound}" : $"TEAM BATTLE - ROUND {currentRound}");
         yield return new WaitForSeconds(1.5f);
-
         DisplayRoundEndNotification("READY...");
         yield return new WaitForSeconds(1.0f);
-
         DisplayRoundEndNotification("FIGHT!");
 
-        if (globalAudioSource != null && roundStartClip != null)
+        if (globalAudioSource != null && roundStartClip != null && !globalAudioSource.isPlaying)
         {
-            if (!globalAudioSource.isPlaying)
-            {
-                globalAudioSource.clip = roundStartClip;
-                globalAudioSource.Play();
-            }
+            globalAudioSource.clip = roundStartClip;
+            globalAudioSource.Play();
         }
 
         Time.timeScale = 1f;
         isRoundActive = true;
-        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(true);
+        SetPauseButton(true);
 
         yield return new WaitForSeconds(1.0f);
         DisplayRoundEndNotification("");
@@ -294,21 +215,16 @@ public class SumoGameManager : MonoBehaviour
     private void Update()
     {
         if (!isRoundActive || isGamePaused) return;
-
         currentTimer -= Time.deltaTime;
         if (timerText != null) timerText.text = Mathf.Max(0, Mathf.CeilToInt(currentTimer)).ToString();
-
-        if (currentTimer <= 0)
-        {
-            EndRoundDueToTimeout();
-        }
+        if (currentTimer <= 0) EndRoundDueToTimeout();
     }
 
-    private void SpawnPlayersAndUI(int CountToSpawn, float radius)
+    private void SpawnPlayersAndUI(int countToSpawn, float radius)
     {
-        for (int i = 0; i < CountToSpawn; i++)
+        for (int i = 0; i < countToSpawn; i++)
         {
-            float angle = i * (360f / CountToSpawn) * Mathf.Deg2Rad;
+            float angle = i * (360f / countToSpawn) * Mathf.Deg2Rad;
             Vector2 spawnPosition = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
 
             GameObject newPlayer = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
@@ -322,23 +238,20 @@ public class SumoGameManager : MonoBehaviour
                 movement.currentKnockbackReceivedMultiplier = playerPassedEngagementCheck[i] ? 1.0f : 1.5f;
             }
 
-            Vector3 directionToCenter = Vector3.zero - newPlayer.transform.position;
-            float angleToCenter = Mathf.Atan2(directionToCenter.y, directionToCenter.x) * Mathf.Rad2Deg;
-            newPlayer.transform.rotation = Quaternion.AngleAxis(angleToCenter - 90f, Vector3.forward);
+            // face the arena centre
+            newPlayer.transform.rotation = Quaternion.AngleAxis(Mathf.Atan2(-spawnPosition.y, -spawnPosition.x) * Mathf.Rad2Deg - 90f, Vector3.forward);
 
             Color renderingColor = versusPlayerColors[i];
+            string label = versusColorNames[i];
             if (activeGameMode == GameMode.Team)
             {
-                int teamAssignment = (i % 2 == 0) ? 0 : 1;
-                playerTeamAssignments[i] = teamAssignment;
-                renderingColor = (teamAssignment == 0) ? teamARed : teamBBlue;
+                playerTeamAssignments[i] = i % 2;
+                renderingColor = i % 2 == 0 ? teamARed : teamBBlue;
+                label = $"T{(i % 2 == 0 ? "A" : "B")}-P{i + 1}";
             }
 
             SpriteRenderer sr = newPlayer.GetComponentInChildren<SpriteRenderer>();
-            if (sr != null)
-            {
-                sr.color = renderingColor;
-            }
+            if (sr != null) sr.color = renderingColor;
 
             GameObject textObj = new GameObject("PlayerNumberText");
             textObj.transform.SetParent(newPlayer.transform);
@@ -346,23 +259,13 @@ public class SumoGameManager : MonoBehaviour
             textObj.transform.rotation = Quaternion.identity;
 
             TextMeshPro tmproText = textObj.AddComponent<TextMeshPro>();
-
-            if (activeGameMode == GameMode.Team)
-            {
-                tmproText.text = $"T{(playerTeamAssignments[i] == 0 ? "A" : "B")}-P{i + 1}";
-            }
-            else
-            {
-                tmproText.text = versusColorNames[i];
-            }
-
+            tmproText.text = label;
             tmproText.fontSize = 5f;
             tmproText.alignment = TextAlignmentOptions.Center;
             tmproText.color = Color.white;
             tmproText.fontStyle = FontStyles.Bold;
             tmproText.outlineWidth = 0.2f;
             tmproText.outlineColor = Color.black;
-
             textObj.AddComponent<LookAtCameraUpright>();
 
             SpawnControllerCanvas(newPlayer, i, renderingColor);
@@ -371,47 +274,33 @@ public class SumoGameManager : MonoBehaviour
 
     private void SpawnControllerCanvas(GameObject playerObj, int playerIdx, Color identityColor)
     {
-        if (playerIdx < uiCornerAnchors.Length && uiCornerAnchors[playerIdx] != null)
-        {
-            GameObject uiControl = Instantiate(mobileControlsUIPrefab, uiCornerAnchors[playerIdx]);
-            spawnedControlUIs[playerIdx] = uiControl;
+        if (playerIdx >= uiCornerAnchors.Length || uiCornerAnchors[playerIdx] == null) return;
 
-            Vector3 anchorLocalPosition = uiCornerAnchors[playerIdx].localPosition;
-            Vector3 directionToCorner = anchorLocalPosition - Vector3.zero;
+        GameObject uiControl = Instantiate(mobileControlsUIPrefab, uiCornerAnchors[playerIdx]);
+        spawnedControlUIs[playerIdx] = uiControl;
 
-            float angleRad = Mathf.Atan2(directionToCorner.y, directionToCorner.x);
-            float angleDeg = angleRad * Mathf.Rad2Deg;
-            float targetZRotation = angleDeg + 90f;
+        Vector3 corner = uiCornerAnchors[playerIdx].localPosition;
+        uiControl.transform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(corner.y, corner.x) * Mathf.Rad2Deg + 90f);
 
-            uiControl.transform.localRotation = Quaternion.Euler(0f, 0f, targetZRotation);
+        foreach (var img in uiControl.GetComponentsInChildren<Image>())
+            if (img.gameObject != uiControl) img.color = identityColor * 0.85f;
 
-            Image[] buttonBackgrounds = uiControl.GetComponentsInChildren<Image>();
-            foreach (var img in buttonBackgrounds)
-            {
-                if (img.gameObject != uiControl) img.color = identityColor * 0.85f;
-            }
-
-            MobileControls inputBridge = uiControl.GetComponent<MobileControls>();
-            TopDownMovement movementController = playerObj.GetComponent<TopDownMovement>();
-
-            if (movementController != null && inputBridge != null)
-            {
-                movementController.controls = inputBridge;
-            }
-        }
+        MobileControls inputBridge = uiControl.GetComponent<MobileControls>();
+        TopDownMovement movementController = playerObj.GetComponent<TopDownMovement>();
+        if (movementController != null && inputBridge != null) movementController.controls = inputBridge;
     }
 
     public void WrestlerFellOut(GameObject victimObj)
     {
         if (!isRoundActive || isGamePaused || !activeWrestlersInRound.Contains(victimObj)) return;
 
-        TopDownMovement victimMovement = victimObj.GetComponent<TopDownMovement>();
-        int victimPlayerIndex = victimMovement != null ? victimMovement.playerIndex : 0;
+        TopDownMovement victim = victimObj.GetComponent<TopDownMovement>();
+        int victimIdx = victim != null ? victim.playerIndex : 0;
 
-        if (spawnedControlUIs[victimPlayerIndex] != null)
+        if (spawnedControlUIs[victimIdx] != null)
         {
-            Destroy(spawnedControlUIs[victimPlayerIndex]);
-            spawnedControlUIs[victimPlayerIndex] = null;
+            Destroy(spawnedControlUIs[victimIdx]);
+            spawnedControlUIs[victimIdx] = null;
         }
 
         if (JuiceManager.Instance != null) JuiceManager.Instance.TriggerImpactJuice(0.12f, 0.25f, 0.45f, 0.4f);
@@ -419,149 +308,76 @@ public class SumoGameManager : MonoBehaviour
         activeWrestlersInRound.Remove(victimObj);
         eliminatedThisRound.Add(victimObj);
 
-        if (victimMovement != null && victimMovement.lastAttackerIndex != -1)
-        {
-            float elapsedSinceLastHit = Time.time - victimMovement.lastInteractionTimestamp;
-
-            if (elapsedSinceLastHit <= victimMovement.trackingWindowDuration)
-            {
-                int killerIdx = victimMovement.lastAttackerIndex;
-                int koPayout = victimMovement.consecutiveHitCount >= 3 ? 3 : (victimMovement.consecutiveHitCount == 2 ? 2 : 1);
-                playerScores[killerIdx] += koPayout;
-            }
-        }
+        // kill credit: 1 / 2 / 3 pts for a 1 / 2 / 3+ hit combo inside the tracking window
+        if (victim != null && victim.lastAttackerIndex != -1 && Time.time - victim.lastInteractionTimestamp <= victim.trackingWindowDuration)
+            playerScores[victim.lastAttackerIndex] += Mathf.Clamp(victim.consecutiveHitCount, 1, 3);
 
         if (activeGameMode == GameMode.Team) EvaluateTeamRoundStatus();
-        else EvaluateVersusRoundStatus(victimPlayerIndex);
+        else EvaluateVersusRoundStatus(victimIdx);
+    }
+
+    private void StopRound()
+    {
+        isRoundActive = false;
+        FreezeAllMovement();
+        SetPauseButton(false);
     }
 
     private void EvaluateTeamRoundStatus()
     {
-        int teamALiveCount = 0;
-        int teamBLiveCount = 0;
+        int teamALive = activeWrestlersInRound.Count(w => w != null && playerTeamAssignments[IndexOf(w)] == 0);
+        int teamBLive = activeWrestlersInRound.Count(w => w != null && playerTeamAssignments[IndexOf(w)] != 0);
 
-        foreach (GameObject wrestler in activeWrestlersInRound)
-        {
-            if (wrestler != null)
-            {
-                int pIdx = wrestler.GetComponent<TopDownMovement>().playerIndex;
-                if (playerTeamAssignments[pIdx] == 0) teamALiveCount++;
-                else teamBLiveCount++;
-            }
-        }
+        if (teamALive == 1 && teamBLive == 1) HandleRingDrop();
+        if (teamALive != 0 && teamBLive != 0) return;
 
-        if (teamALiveCount == 1 && teamBLiveCount == 1) HandleRingDrop();
+        StopRound();
 
-        if (teamALiveCount == 0 || teamBLiveCount == 0)
-        {
-            isRoundActive = false;
-            FreezeAllMovement();
-            if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
-
-            string visualAnnouncementText = "";
-
-            if (teamALiveCount == 0 && teamBLiveCount == 0)
-            {
-                visualAnnouncementText = "MUTUAL TEAM ELIMINATION!\nROUND DRAW!";
-            }
-            else if (teamALiveCount == 0)
-            {
-                teamBScore++;
-                visualAnnouncementText = $"BLUE TEAM WINS THE ROUND!\n\n<b>--- STANDINGS ---</b>\nRED TEAM: {teamAScore} WINS\nBLUE TEAM: {teamBScore} WINS";
-            }
-            else
-            {
-                teamAScore++;
-                visualAnnouncementText = $"RED TEAM WINS THE ROUND!\n\n<b>--- STANDINGS ---</b>\nRED TEAM: {teamAScore} WINS\nBLUE TEAM: {teamBScore} WINS";
-            }
-
-            CheckTeamTournamentStandings(visualAnnouncementText);
-        }
-    }
-
-    private void CheckTeamTournamentStandings(string baseBannerMessage)
-    {
-        DisplayRoundEndNotification(baseBannerMessage);
-
-        if (teamAScore >= teamRoundsToWin)
-        {
-            if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
-            if (globalAudioSource != null) globalAudioSource.Stop();
-            StartCoroutine(DelayedBannerOverride("🏆 MATCH OVER 🏆\nRED TEAM HAS WON THE MATCH!", 3.5f));
-            StartCoroutine(MatchEndReturnDelayRoutine(7f));
-        }
-        else if (teamBScore >= teamRoundsToWin)
-        {
-            if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
-            if (globalAudioSource != null) globalAudioSource.Stop();
-            StartCoroutine(DelayedBannerOverride("🏆 MATCH OVER 🏆\nBLUE TEAM HAS WON THE MATCH!", 3.5f));
-            StartCoroutine(MatchEndReturnDelayRoutine(7f));
-        }
+        string text;
+        if (teamALive == 0 && teamBLive == 0) text = "MUTUAL TEAM ELIMINATION!\nROUND DRAW!";
         else
         {
-            currentRound++;
-            StartCoroutine(RoundTransitionDelayRoutine(5f));
+            if (teamALive == 0) teamBScore++; else teamAScore++;
+            text = $"{(teamALive == 0 ? "BLUE" : "RED")} TEAM WINS THE ROUND!\n\n<b>--- STANDINGS ---</b>\nRED TEAM: {teamAScore} WINS\nBLUE TEAM: {teamBScore} WINS";
         }
+
+        DisplayRoundEndNotification(text);
+        if (teamAScore >= teamRoundsToWin) EndMatch("RED TEAM HAS WON THE MATCH!");
+        else if (teamBScore >= teamRoundsToWin) EndMatch("BLUE TEAM HAS WON THE MATCH!");
+        else NextRound();
     }
 
-    private void EvaluateVersusRoundStatus(int victimPlayerIndex)
+    private void EvaluateVersusRoundStatus(int victimIdx)
     {
         if (isSuddenDeathActive)
         {
-            isRoundActive = false;
-            FreezeAllMovement();
-            if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
-            int winnerIdx = (victimPlayerIndex == suddenDeathPlayerA) ? suddenDeathPlayerB : suddenDeathPlayerA;
+            StopRound();
+            int winnerIdx = victimIdx == suddenDeathPlayerA ? suddenDeathPlayerB : suddenDeathPlayerA;
             playerScores[winnerIdx] += 5;
-
-            string summaryText = $"{versusColorNames[winnerIdx]} WINS SUDDEN DEATH!\n\n" + BuildLeaderboardString();
-            CheckVersusTournamentStandings(summaryText);
+            CheckVersusTournamentStandings($"{versusColorNames[winnerIdx]} WINS SUDDEN DEATH!\n\n" + BuildLeaderboardString());
             return;
         }
 
-        int remainingCount = activeWrestlersInRound.Count + 1;
-        int placementPayout = 0;
-
-        if (activePlayerCount == 4)
-        {
-            if (remainingCount == 3) placementPayout = 1;
-            else if (remainingCount == 2) placementPayout = 3;
-        }
-        else if (activePlayerCount == 3 && remainingCount == 2) placementPayout = 3;
-        else if (activePlayerCount == 2 && remainingCount == 2) placementPayout = 1;
-
-        playerScores[victimPlayerIndex] += placementPayout;
+        // placement points for the player who just fell
+        int remaining = activeWrestlersInRound.Count + 1;
+        if (remaining == 2) playerScores[victimIdx] += activePlayerCount == 2 ? 1 : 3;
+        else if (remaining == 3 && activePlayerCount == 4) playerScores[victimIdx] += 1;
 
         if (activeWrestlersInRound.Count == 1)
         {
-            isRoundActive = false;
-            FreezeAllMovement();
-            if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
-
-            GameObject survivorObj = activeWrestlersInRound[0];
-            int survivorIdx = survivorObj.GetComponent<TopDownMovement>().playerIndex;
+            StopRound();
+            int survivorIdx = IndexOf(activeWrestlersInRound[0]);
             playerScores[survivorIdx] += 5;
-
             RecordEngagementStates();
-
-            string summaryText = $"{versusColorNames[survivorIdx]} SURVIVED THE ROUND! (+5 pts)\n\n" + BuildLeaderboardString();
-            CheckVersusTournamentStandings(summaryText);
+            CheckVersusTournamentStandings($"{versusColorNames[survivorIdx]} SURVIVED THE ROUND! (+5 pts)\n\n" + BuildLeaderboardString());
         }
         else if (activeWrestlersInRound.Count == 0 && eliminatedThisRound.Count >= 2)
         {
-            isRoundActive = false;
-            FreezeAllMovement();
-            if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
-
-            GameObject lastFell = eliminatedThisRound[eliminatedThisRound.Count - 1];
-            GameObject secondLastFell = eliminatedThisRound[eliminatedThisRound.Count - 2];
-
-            int pIdxA = lastFell.GetComponent<TopDownMovement>().playerIndex;
-            int pIdxB = secondLastFell.GetComponent<TopDownMovement>().playerIndex;
-
+            StopRound();
+            int pIdxA = IndexOf(eliminatedThisRound[eliminatedThisRound.Count - 1]);
+            int pIdxB = IndexOf(eliminatedThisRound[eliminatedThisRound.Count - 2]);
             playerScores[pIdxA] += 3;
             playerScores[pIdxB] += 3;
-
             RecordEngagementStates();
             StartCoroutine(TriggerSuddenDeathTransitionSequence(pIdxA, pIdxB));
         }
@@ -573,34 +389,24 @@ public class SumoGameManager : MonoBehaviour
 
         if (activeGameMode == GameMode.Team)
         {
-            int liveCount = activeWrestlersInRound.Count;
-            if (liveCount == 4) HandleRingDrop();
+            if (activeWrestlersInRound.Count == 4) HandleRingDrop();
             currentTimer = roundDurationSeconds;
             return;
         }
 
-        isRoundActive = false;
-        FreezeAllMovement();
-        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(false);
+        StopRound();
         HandleRingDrop();
 
-        for (int i = 0; i < activePlayerCount; i++)
+        foreach (var p in activeWrestlersInRound)
         {
-            GameObject foundPlayer = activeWrestlersInRound.Find(p => p != null && p.GetComponent<TopDownMovement>().playerIndex == i);
-            if (foundPlayer != null)
-            {
-                TopDownMovement tdm = foundPlayer.GetComponent<TopDownMovement>();
-                if (tdm != null && !tdm.hasDealtDamageThisRound)
-                {
-                    playerScores[i] = Mathf.Max(0, playerScores[i] - 1);
-                    playerPassedEngagementCheck[i] = false;
-                }
-                else playerPassedEngagementCheck[i] = true;
-            }
+            TopDownMovement tdm = p != null ? p.GetComponent<TopDownMovement>() : null;
+            if (tdm == null || tdm.playerIndex >= activePlayerCount) continue;
+            int i = tdm.playerIndex;
+            playerPassedEngagementCheck[i] = tdm.hasDealtDamageThisRound;
+            if (!tdm.hasDealtDamageThisRound) playerScores[i] = Mathf.Max(0, playerScores[i] - 1);
         }
 
-        string summaryText = "TIME OUT! NO ENGAGEMENT DETECTED! RING SHRUNK!\n\n" + BuildLeaderboardString();
-        CheckVersusTournamentStandings(summaryText);
+        CheckVersusTournamentStandings("TIME OUT! NO ENGAGEMENT DETECTED! RING SHRUNK!\n\n" + BuildLeaderboardString());
     }
 
     private void CheckVersusTournamentStandings(string completionBannerMessage)
@@ -608,61 +414,43 @@ public class SumoGameManager : MonoBehaviour
         DisplayRoundEndNotification(completionBannerMessage);
 
         int highestScoreIdx = 0;
-        int highestScore = -1;
-        bool matchWon = false;
+        for (int i = 1; i < activePlayerCount; i++)
+            if (playerScores[i] > playerScores[highestScoreIdx]) highestScoreIdx = i;
 
-        for (int i = 0; i < activePlayerCount; i++)
-        {
-            if (playerScores[i] > highestScore)
-            {
-                highestScore = playerScores[i];
-                highestScoreIdx = i;
-            }
-            if (playerScores[i] >= VERSUS_WINNING_SCORE) matchWon = true;
-        }
+        string leader = versusColorNames[highestScoreIdx];
+        if (playerScores[highestScoreIdx] >= VERSUS_WINNING_SCORE) EndMatch($"{leader} IS THE FIRST TO 15 PTS!");
+        else if (currentRound >= totalVersusRounds) { currentRound++; EndMatch($"{leader} HIGHEST FINAL SCORE WIN!"); }
+        else NextRound();
+    }
 
-        if (matchWon)
-        {
-            if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
-            if (globalAudioSource != null) globalAudioSource.Stop();
-            StartCoroutine(DelayedBannerOverride($"🏆 MATCH OVER 🏆\n{versusColorNames[highestScoreIdx]} IS THE FIRST TO 15 PTS!", 3.5f));
-            StartCoroutine(MatchEndReturnDelayRoutine(7f));
-        }
-        else
-        {
-            currentRound++;
-            if (currentRound <= totalVersusRounds) StartCoroutine(RoundTransitionDelayRoutine(5f));
-            else
-            {
-                if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
-                if (globalAudioSource != null) globalAudioSource.Stop();
-                StartCoroutine(DelayedBannerOverride($"🏆 MATCH OVER 🏆\n{versusColorNames[highestScoreIdx]} HIGHEST FINAL SCORE WIN!", 3.5f));
-                StartCoroutine(MatchEndReturnDelayRoutine(7f));
-            }
-        }
+    private void NextRound()
+    {
+        currentRound++;
+        StartCoroutine(RoundTransitionDelayRoutine(5f));
+    }
+
+    private void EndMatch(string winnerLine)
+    {
+        if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
+        if (globalAudioSource != null) globalAudioSource.Stop();
+        StartCoroutine(DelayedBannerOverride($"🏆 MATCH OVER 🏆\n{winnerLine}", 3.5f));
+        StartCoroutine(MatchEndReturnDelayRoutine(7f));
     }
 
     private string BuildLeaderboardString()
     {
-        string header = "<b>--- SCOREBOARD (RACE TO 15) ---</b>\n";
-        List<int> sortedIndices = new List<int>();
-        for (int i = 0; i < activePlayerCount; i++) sortedIndices.Add(i);
-        sortedIndices.Sort((a, b) => playerScores[b].CompareTo(playerScores[a]));
-
-        for (int placement = 0; placement < sortedIndices.Count; placement++)
-        {
-            int originalPlayerIdx = sortedIndices[placement];
-            header += $"{(placement == 0 ? "👑 1st" : $"{placement + 1}th")}: {versusColorNames[originalPlayerIdx]} - {playerScores[originalPlayerIdx]} / 15 pts\n";
-        }
-        return header;
+        string board = "<b>--- SCOREBOARD (RACE TO 15) ---</b>\n";
+        var sorted = Enumerable.Range(0, activePlayerCount).ToList();
+        sorted.Sort((a, b) => playerScores[b].CompareTo(playerScores[a]));
+        for (int place = 0; place < sorted.Count; place++)
+            board += $"{(place == 0 ? "👑 1st" : $"{place + 1}th")}: {versusColorNames[sorted[place]]} - {playerScores[sorted[place]]} / 15 pts\n";
+        return board;
     }
 
     private void RecordEngagementStates()
     {
-        foreach (var player in activeWrestlersInRound)
-            if (player != null) playerPassedEngagementCheck[player.GetComponent<TopDownMovement>().playerIndex] = player.GetComponent<TopDownMovement>().hasDealtDamageThisRound;
-        foreach (var player in eliminatedThisRound)
-            if (player != null) playerPassedEngagementCheck[player.GetComponent<TopDownMovement>().playerIndex] = player.GetComponent<TopDownMovement>().hasDealtDamageThisRound;
+        foreach (var player in activeWrestlersInRound.Concat(eliminatedThisRound))
+            if (player != null) playerPassedEngagementCheck[IndexOf(player)] = player.GetComponent<TopDownMovement>().hasDealtDamageThisRound;
     }
 
     public void TogglePauseGameSystem()
@@ -673,35 +461,24 @@ public class SumoGameManager : MonoBehaviour
         Time.timeScale = isGamePaused ? 0f : 1f;
     }
 
+    private void SetRing(int i, bool active)
+    {
+        if (arenaRings[i] == null) return;
+        arenaRings[i].isCurrentOutboundLimit = active;
+        arenaRings[i].gameObject.SetActive(active);
+    }
+
     private void HandleRingDrop()
     {
-        if (currentActiveRingIndex < arenaRings.Count - 1)
-        {
-            if (arenaRings[currentActiveRingIndex] != null)
-            {
-                arenaRings[currentActiveRingIndex].isCurrentOutboundLimit = false;
-                arenaRings[currentActiveRingIndex].gameObject.SetActive(false);
-            }
-            currentActiveRingIndex++;
-            if (arenaRings[currentActiveRingIndex] != null)
-            {
-                arenaRings[currentActiveRingIndex].gameObject.SetActive(true);
-                arenaRings[currentActiveRingIndex].isCurrentOutboundLimit = true;
-            }
-        }
+        if (currentActiveRingIndex >= arenaRings.Count - 1) return;
+        SetRing(currentActiveRingIndex, false);
+        SetRing(++currentActiveRingIndex, true);
     }
 
     private void ResetRingsToDefault()
     {
         currentActiveRingIndex = 0;
-        for (int i = 0; i < arenaRings.Count; i++)
-        {
-            if (arenaRings[i] != null)
-            {
-                arenaRings[i].gameObject.SetActive(i == 0);
-                arenaRings[i].isCurrentOutboundLimit = (i == 0);
-            }
-        }
+        for (int i = 0; i < arenaRings.Count; i++) SetRing(i, i == 0);
     }
 
     private void FreezeAllMovement()
@@ -718,24 +495,22 @@ public class SumoGameManager : MonoBehaviour
 
     public void DisplayRoundEndNotification(string displayMessage)
     {
+        if (roundWinnerAnnounceText == null) return;
+        bool show = !string.IsNullOrEmpty(displayMessage);
+        roundWinnerAnnounceText.gameObject.SetActive(show);
+        if (show) roundWinnerAnnounceText.text = displayMessage;
+        if (timerText != null) timerText.gameObject.SetActive(!show);
+        foreach (var ui in spawnedControlUIs) if (ui != null) ui.SetActive(!show);
+    }
+
+    private void HideAnnouncement()
+    {
         if (roundWinnerAnnounceText != null)
         {
-            if (string.IsNullOrEmpty(displayMessage))
-            {
-                roundWinnerAnnounceText.gameObject.SetActive(false);
-                if (timerText != null) timerText.gameObject.SetActive(true);
-                for (int i = 0; i < spawnedControlUIs.Length; i++)
-                    if (spawnedControlUIs[i] != null) spawnedControlUIs[i].SetActive(true);
-            }
-            else
-            {
-                roundWinnerAnnounceText.gameObject.SetActive(true);
-                roundWinnerAnnounceText.text = displayMessage;
-                if (timerText != null) timerText.gameObject.SetActive(false);
-                for (int i = 0; i < spawnedControlUIs.Length; i++)
-                    if (spawnedControlUIs[i] != null) spawnedControlUIs[i].SetActive(false);
-            }
+            roundWinnerAnnounceText.text = "";
+            roundWinnerAnnounceText.gameObject.SetActive(false);
         }
+        if (timerText != null) timerText.gameObject.SetActive(true);
     }
 
     private IEnumerator TriggerSuddenDeathTransitionSequence(int pA, int pB)
@@ -747,10 +522,9 @@ public class SumoGameManager : MonoBehaviour
         isSuddenDeathActive = true;
         suddenDeathPlayerA = pA;
         suddenDeathPlayerB = pB;
-
         currentTimer = roundDurationSeconds;
         isRoundActive = true;
-        if (pauseButtonManager != null) pauseButtonManager.SetPauseButtonGameplayState(true);
+        SetPauseButton(true);
     }
 
     private IEnumerator DelayedBannerOverride(string text, float delay)
@@ -762,12 +536,7 @@ public class SumoGameManager : MonoBehaviour
     private IEnumerator RoundTransitionDelayRoutine(float delayDuration)
     {
         yield return new WaitForSeconds(delayDuration - 0.5f);
-        if (roundWinnerAnnounceText != null)
-        {
-            roundWinnerAnnounceText.text = "";
-            roundWinnerAnnounceText.gameObject.SetActive(false);
-        }
-        if (timerText != null) timerText.gameObject.SetActive(true);
+        HideAnnouncement();
         yield return new WaitForSeconds(0.5f);
         StartNewRound();
     }
@@ -784,24 +553,14 @@ public class SumoGameManager : MonoBehaviour
         StopAllCoroutines();
         if (globalAudioSource != null) globalAudioSource.Stop();
         ClearMatchData();
-
         for (int i = 0; i < playerScores.Length; i++) playerScores[i] = 0;
-
-        if (roundWinnerAnnounceText != null)
-        {
-            roundWinnerAnnounceText.text = "";
-            roundWinnerAnnounceText.gameObject.SetActive(false);
-        }
-        if (timerText != null) timerText.gameObject.SetActive(true);
-
-        isMatchOngoing = true;
+        HideAnnouncement();
         StartNewRound();
     }
 
     private void ClearMatchData()
     {
-        foreach (var player in activeWrestlersInRound) if (player != null) Destroy(player);
-        foreach (var player in eliminatedThisRound) if (player != null) Destroy(player);
+        foreach (var player in activeWrestlersInRound.Concat(eliminatedThisRound)) if (player != null) Destroy(player);
         for (int i = 0; i < spawnedControlUIs.Length; i++)
         {
             if (spawnedControlUIs[i] != null) Destroy(spawnedControlUIs[i]);
